@@ -40,8 +40,6 @@ public class JsonWebTokenFilter extends OncePerRequestFilter {
             return true;
         }
 
-        System.out.println("JWT Filter URI = " + uri);
-
         // WebSocket 握手階段尚未透過 STOMP 傳送 Token，先放行 HTTP 握手
         if (uri.equals("/ws") || uri.startsWith("/ws/")) {
                 return true;
@@ -106,15 +104,7 @@ public class JsonWebTokenFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        System.out.println(">>> doFilterInternal ENTER <<<");
-
-        response.setHeader("X-Debug-Filter", "JsonWebTokenFilter");
-
         String auth = request.getHeader("Authorization");
-
-        System.out.println("=== 進入 doFilterInternal ===");
-        System.out.println("Method = " + request.getMethod());
-        System.out.println("Authorization exists = " + (auth != null));
 
         // 沒有 Bearer Token
         if (auth == null || !auth.startsWith("Bearer ")) {
@@ -124,9 +114,7 @@ public class JsonWebTokenFilter extends OncePerRequestFilter {
         }
 
         String token = auth.substring(7);
-        System.out.println("=== 開始驗證 JWT ===");
         String subject = jsonWebTokenUtility.validateToken(token);
-        System.out.println("JWT subject = " + subject);
 
         if (subject == null || subject.isBlank()) {
             response.sendError(
@@ -157,9 +145,6 @@ public class JsonWebTokenFilter extends OncePerRequestFilter {
 
         String status = usersBean.getStatus();
 
-        System.out.println("JWT User Status = [" + status + "]");
-        System.out.println("JWT Filter Method = [" + request.getMethod() + "]");
-
         // 已停權或已刪除的會員不能使用舊 Token
         if ("BANNED".equals(status) || "DELETED".equals(status)) {
             response.sendError(
@@ -177,10 +162,6 @@ public class JsonWebTokenFilter extends OncePerRequestFilter {
 
         boolean isLogoutApi = request.getMethod().equals("POST")
                 && request.getRequestURI().equals("/auth/logout");
-
-        System.out.println("isMyProfileApi = " + isMyProfileApi);
-        System.out.println("isMyStatusApi = " + isMyStatusApi);
-        System.out.println("isLogoutApi = " + isLogoutApi);
 
         if ("INACTIVE".equals(status)
                 && !isMyProfileApi
