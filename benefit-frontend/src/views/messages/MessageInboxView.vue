@@ -5,6 +5,13 @@ import { Client } from '@stomp/stompjs'
 import http from '@/plugins/axios'
 import { useAuth } from '@/composables/useAuth'
 import { getWebSocketUrl } from '@/utils/websocketUrl'
+import PageIntro from '@/components/layout/PageIntro.vue'
+import ResultBanner from '@/components/layout/ResultBanner.vue'
+import StatePanel from '@/components/layout/StatePanel.vue'
+import AppButton from '@/components/ui/Button.vue'
+import messageIcon from '@iconify-icons/mdi/message-text-outline'
+import chatIcon from '@iconify-icons/mdi/chat-outline'
+import refreshIcon from '@iconify-icons/mdi/refresh'
 
 const router = useRouter()
 const auth = useAuth()
@@ -244,63 +251,43 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="message-inbox py-4">
-    <div class="inbox-card">
-      <!-- 標題 -->
-      <div class="inbox-header">
-        <div>
-          <h2 class="mb-1">我的訊息</h2>
-          <p class="mb-0">查看你與其他會員的私人對話</p>
-        </div>
+  <section>
+    <PageIntro
+      kicker="✦ MESSAGES"
+      lead="我的"
+      mark="訊息"
+      description="查看你與其他會員的私人對話。"
+      :icon-left="messageIcon"
+      :icon-right="chatIcon"
+      :icon-top="refreshIcon"
+    />
 
-        <button
-          type="button"
-          class="btn btn-outline-secondary refresh-btn"
-          :disabled="loading"
-          @click="loadConversations"
-        >
-          {{ loading ? '載入中...' : '重新載入' }}
-        </button>
-      </div>
+    <ResultBanner
+      v-if="!loading && !errorMessage"
+      :icon="messageIcon"
+      title="私人對話"
+      :count="conversations.length"
+      unit-text="個對話"
+      empty-text="目前還沒有私人訊息。前往其他會員的公開頁面，即可開始聊天。"
+    >
+      <template #action>
+        <AppButton type="button" variant="outline" :icon="refreshIcon" :disabled="loading" @click="loadConversations">
+          重新載入
+        </AppButton>
+      </template>
+    </ResultBanner>
 
-      <!-- 載入中 -->
-      <div v-if="loading" class="empty-state">
-        <div
-          class="spinner-border"
-          role="status"
-          aria-label="載入中"
-        ></div>
-        <p class="mt-3 mb-0">正在載入訊息...</p>
-      </div>
+    <StatePanel v-if="loading" variant="loading" message="正在載入訊息…" :icon="messageIcon" />
+    <StatePanel
+      v-else-if="errorMessage"
+      variant="error"
+      title="目前無法取得訊息"
+      :message="errorMessage"
+      @retry="loadConversations"
+    />
 
-      <!-- 載入失敗 -->
-      <div v-else-if="errorMessage" class="empty-state">
-        <p class="text-danger mb-3">{{ errorMessage }}</p>
-        <button
-          type="button"
-          class="btn btn-success"
-          @click="loadConversations"
-        >
-          再試一次
-        </button>
-      </div>
-
-      <!-- 尚無聊天室 -->
-      <div
-        v-else-if="conversations.length === 0"
-        class="empty-state"
-      >
-        <div class="empty-icon">
-          <i class="bi bi-chat-dots"></i>
-        </div>
-        <h5>目前還沒有私人訊息</h5>
-        <p class="mb-0">
-          前往其他會員的公開頁面，即可開始聊天。
-        </p>
-      </div>
-
-      <!-- 聊天室列表 -->
-      <div v-else class="conversation-list">
+    <div v-else-if="conversations.length" class="inbox-card">
+      <div class="conversation-list">
         <button
           v-for="conversation in conversations"
           :key="conversation.conversationId"
@@ -348,31 +335,25 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.message-inbox {
-  width: 100%;
-  min-width: 0;
-
-  --mint: #a8d5ba;
-  --mint-light: #edf6f0;
-  --mint-dark: #365844;
-  --border: #e0ece3;
-  --text: #405b49;
-  --muted: #84968b;
-
-  color: var(--text);
-}
-
 .inbox-card {
   overflow: hidden;
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  background: #fff;
-  box-shadow: 0 4px 16px rgb(87 130 99 / 8%);
+  border: 1.5px solid var(--c-border);
+  border-radius: 22px;
+  background: var(--c-card);
+  box-shadow: var(--shadow-soft);
+  color: var(--c-ink);
+
+  --mint: #ff7049;
+  --mint-light: #fff3ee;
+  --mint-dark: #9a4632;
+  --border: var(--c-border);
+  --text: var(--c-ink);
+  --muted: var(--c-muted);
 }
 
 .inbox-header {

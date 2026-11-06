@@ -12,7 +12,12 @@ import filmIcon from "@iconify-icons/mdi/movie-open";
 import calendarIcon from "@iconify-icons/mdi/calendar";
 import { openAppAlert } from "@/components/ui/Alert.vue";
 import AppModal from "@/components/ui/AppModal.vue";
+import AppButton from "@/components/ui/Button.vue";
+import PageIntro from "@/components/layout/PageIntro.vue";
+import ResultBanner from "@/components/layout/ResultBanner.vue";
+import StatePanel from "@/components/layout/StatePanel.vue";
 import { useAuth } from "@/composables/useAuth";
+import refreshIcon from "@iconify-icons/mdi/refresh";
 
 import {
     getMyExchangeListings,
@@ -864,26 +869,40 @@ onMounted(async () => {
 
 <template>
     <section class="my-listings">
-        <!-- 頁面標題 -->
-        <header class="page-heading">
-            <div class="page-heading-content">
-                <h2>我的刊登</h2>
-                <p>查看及管理自己刊登的特典與票券。</p>
-            </div>
+        <PageIntro
+            kicker="✦ MY LISTINGS"
+            lead="我的"
+            mark="刊登"
+            description="查看及管理自己刊登的特典與票券。"
+            :icon-left="giftIcon"
+            :icon-right="ticketIcon"
+            :icon-top="filmIcon"
+        />
 
-            <button class="btn btn-outline-secondary reload-button" type="button" :disabled="loading"
-                @click="loadListings">
-                重新載入
-            </button>
-        </header>
-
-        <div v-if="!isLoggedIn" class="empty-state">
-            請先登入，再查看自己的刊登。
-        </div>
+        <ResultBanner
+            v-if="!isLoggedIn"
+            :icon="giftIcon"
+            title="我的刊登"
+            :count="0"
+            empty-text="請先登入，再查看自己的刊登。"
+        />
 
         <template v-else>
+            <ResultBanner
+                v-if="!loading && !errorMessage"
+                :icon="activeTab === 'exchange' ? giftIcon : ticketIcon"
+                :title="activeTab === 'exchange' ? '我的特典刊登' : '我的票券刊登'"
+                :count="currentListings.length"
+                unit-text="筆刊登"
+                empty-text="目前沒有刊登。"
+            >
+                <template #action>
+                    <AppButton type="button" variant="outline" :icon="refreshIcon" :disabled="loading" @click="loadListings">
+                        重新載入
+                    </AppButton>
+                </template>
+            </ResultBanner>
 
-            <!-- 分類切換 -->
             <nav class="listing-tabs" aria-label="我的刊登分類">
                 <button type="button" :class="{ active: activeTab === 'exchange' }" @click="activeTab = 'exchange'">
                     我的特典刊登
@@ -894,20 +913,17 @@ onMounted(async () => {
                 </button>
             </nav>
 
-            <p v-if="loading" class="loading-message">
-                資料載入中……
-            </p>
+            <StatePanel v-if="loading" variant="loading" message="正在載入刊登…" :icon="giftIcon" />
 
-            <div v-else-if="!currentListings.length" class="empty-state">
-                目前沒有{{
-                    activeTab === "exchange"
-                        ? "特典"
-                        : "票券"
-                }}刊登。
-            </div>
+            <StatePanel
+                v-else-if="errorMessage"
+                variant="error"
+                title="目前無法取得刊登"
+                :message="errorMessage"
+                @retry="loadListings"
+            />
 
-            <!-- ========== 我的特典刊登：維持原本卡片版型 ========== -->
-            <template v-else-if="activeTab === 'exchange'">
+            <template v-else-if="currentListings.length && activeTab === 'exchange'">
                 <div class="my-exchange-list">
                     <article v-for="(item, index) in exchangeListings" :key="listingId(item, 'exchange') ?? index"
                         class="favorite-card">
@@ -982,7 +998,7 @@ onMounted(async () => {
             </template>
 
             <!-- ========== 我的票券刊登：套用票券收藏卡片版型 ========== -->
-            <template v-else>
+            <template v-else-if="activeTab === 'ticket' && currentListings.length">
                 <div class="my-ticket-list">
                     <article v-for="(item, index) in ticketListings" :key="listingId(item, 'ticket') ?? index"
                         class="favorite-card ticket-listing-card">
@@ -1335,16 +1351,14 @@ onMounted(async () => {
     min-width: 0;
     max-width: 100%;
     padding: 0.65rem 0.9rem;
-    border: 1px solid #e8e5e1;
-    border-radius: 0.65rem;
-    background: #fff;
-    color: inherit;
+    border: 1.5px solid var(--c-border);
+    border-radius: 14px;
+    background: var(--c-card);
+    color: var(--c-ink);
     font: inherit;
+    font-weight: 800;
     overflow-wrap: anywhere;
     cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease;
 }
 
 .listing-tabs button.active {

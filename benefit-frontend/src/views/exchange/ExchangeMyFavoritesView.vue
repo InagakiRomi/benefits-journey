@@ -5,6 +5,14 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { openAppAlert } from "@/components/ui/Alert.vue";
 import { useAuth } from "@/composables/useAuth";
+import PageIntro from "@/components/layout/PageIntro.vue";
+import ResultBanner from "@/components/layout/ResultBanner.vue";
+import StatePanel from "@/components/layout/StatePanel.vue";
+import AppButton from "@/components/ui/Button.vue";
+import heartIcon from "@iconify-icons/mdi/heart-outline";
+import giftIcon from "@iconify-icons/mdi/gift-outline";
+import ticketIcon from "@iconify-icons/mdi/ticket-outline";
+import refreshIcon from "@iconify-icons/mdi/refresh";
 
 import ExchangeFavoriteSection from "@/components/exchange/ExchangeFavoriteSection.vue";
 import TicketFavoriteSection from "@/components/exchange/TicketFavoriteSection.vue";
@@ -418,23 +426,39 @@ onUnmounted(() => {
 
 <template>
     <section class="my-favorites">
-        <header class="page-heading">
-            <div>
-                <h2>我的收藏</h2>
-                <p>查看你收藏的特典交換與票券刊登。</p>
-            </div>
+        <PageIntro
+            kicker="✦ MY FAVORITES"
+            lead="我的"
+            mark="收藏"
+            description="查看你收藏的特典交換與票券刊登。"
+            :icon-left="heartIcon"
+            :icon-right="giftIcon"
+            :icon-top="ticketIcon"
+        />
 
-            <button class="btn btn-outline-secondary" type="button" :disabled="loading || !isLoggedIn"
-                @click="loadFavorites">
-                重新載入
-            </button>
-        </header>
-
-        <div v-if="!isLoggedIn" class="empty-state">
-            請先登入，再查看自己的收藏。
-        </div>
+        <ResultBanner
+            v-if="!isLoggedIn"
+            :icon="heartIcon"
+            title="我的收藏"
+            :count="0"
+            empty-text="請先登入，再查看自己的收藏。"
+        />
 
         <template v-else>
+            <ResultBanner
+                v-if="!loading && !errorMessage"
+                :icon="activeTab === 'exchange' ? giftIcon : ticketIcon"
+                :title="activeTab === 'exchange' ? '我的特典收藏' : '我的票券收藏'"
+                :count="activeTab === 'exchange' ? exchangeFavorites.length : ticketFavorites.length"
+                unit-text="筆收藏"
+                empty-text="目前沒有收藏。"
+            >
+                <template #action>
+                    <AppButton type="button" variant="outline" :icon="refreshIcon" :disabled="loading" @click="loadFavorites">
+                        重新載入
+                    </AppButton>
+                </template>
+            </ResultBanner>
 
             <nav class="favorite-tabs" aria-label="我的收藏分類">
                 <button type="button" :class="{ active: activeTab === 'exchange' }" @click="activeTab = 'exchange'">
@@ -446,12 +470,19 @@ onUnmounted(() => {
                 </button>
             </nav>
 
-            <p v-if="loading">收藏載入中……</p>
+            <StatePanel v-if="loading" variant="loading" message="正在載入收藏…" :icon="heartIcon" />
+            <StatePanel
+                v-else-if="errorMessage"
+                variant="error"
+                title="目前無法取得收藏"
+                :message="errorMessage"
+                @retry="loadFavorites"
+            />
 
-            <ExchangeFavoriteSection v-if="!loading && activeTab === 'exchange'" :favorites="exchangeFavorites"
+            <ExchangeFavoriteSection v-else-if="activeTab === 'exchange'" :favorites="exchangeFavorites"
                 @remove-favorite="removeFavorite($event, 'exchange')" />
 
-            <TicketFavoriteSection v-if="!loading && activeTab === 'ticket'" :favorites="ticketFavorites"
+            <TicketFavoriteSection v-else-if="activeTab === 'ticket'" :favorites="ticketFavorites"
                 :cinema-name="cinemaName" :movie-name="movieName" @remove-favorite="removeFavorite($event, 'ticket')" />
         </template>
     </section>
@@ -461,26 +492,6 @@ onUnmounted(() => {
 .my-favorites {
     min-width: 0;
 }
-
-.page-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-}
-
-.page-heading h2 {
-    margin: 0;
-    font-size: 1.35rem;
-    font-weight: 800;
-}
-
-.page-heading p {
-    margin: 0.4rem 0 0;
-    color: #687386;
-}
-
 
 .favorite-tabs {
     display: flex;
@@ -493,11 +504,12 @@ onUnmounted(() => {
     min-width: 0;
     max-width: 100%;
     padding: 0.65rem 0.9rem;
-    border: 1px solid #e8e5e1;
-    border-radius: 0.65rem;
-    background: #fff;
-    color: inherit;
+    border: 1.5px solid var(--c-border);
+    border-radius: 14px;
+    background: var(--c-card);
+    color: var(--c-ink);
     font: inherit;
+    font-weight: 800;
     overflow-wrap: anywhere;
     cursor: pointer;
 }
@@ -516,19 +528,4 @@ onUnmounted(() => {
     }
 }
 
-.empty-state {
-    padding: 1.5rem 1rem;
-    border: 1px dashed #d9d2cc;
-    border-radius: 0.8rem;
-    background: #faf8f6;
-    color: #687386;
-    text-align: center;
-}
-
-@media (max-width: 650px) {
-    .page-heading {
-        align-items: stretch;
-        flex-direction: column;
-    }
-}
 </style>
