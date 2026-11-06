@@ -1,4 +1,4 @@
-<!-- ========== src/views/ExchangeMyListingsView.vue ========== -->
+<!-- ========== src/views/exchange/ExchangeMyListingsView.vue ========== -->
 <!-- 會員刊登管理頁面 -->
 
 <script setup>
@@ -10,7 +10,7 @@ import ticketIcon from "@iconify-icons/mdi/ticket";
 import cinemaIcon from "@iconify-icons/mdi/filmstrip";
 import filmIcon from "@iconify-icons/mdi/movie-open";
 import calendarIcon from "@iconify-icons/mdi/calendar";
-import Swal from "sweetalert2";
+import { openAppAlert } from "@/components/ui/Alert.vue";
 import AppModal from "@/components/ui/AppModal.vue";
 import { useAuth } from "@/composables/useAuth";
 
@@ -139,13 +139,12 @@ async function handleAuthExpired(error) {
 
     logout();
 
-    await Swal.fire({
-        icon: "warning",
+    await openAppAlert({
+        variant: "warning",
         title: "登入狀態已失效",
         text: "登入憑證可能已過期或無效，請重新登入後再繼續操作。",
-        confirmButtonText: "前往登入",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
+        confirmText: "前往登入",
+        cancelText: "",
     });
 
     await router.push({
@@ -603,7 +602,7 @@ function resetForms() {
     });
 }
 
-function beginEdit(item, kind) {
+async function beginEdit(item, kind) {
     if (item?.status === "DELETED") return;
 
     editingKind.value = kind;
@@ -614,11 +613,13 @@ function beginEdit(item, kind) {
         editingId.value === undefined ||
         editingId.value === ""
     ) {
-        Swal.fire(
-            "無法修改",
-            "找不到這筆刊登的 ID。",
-            "error",
-        );
+        await openAppAlert({
+            variant: "error",
+            title: "無法修改",
+            text: "找不到這筆刊登的 ID。",
+            confirmText: "確定",
+            cancelText: "",
+        });
         return;
     }
 
@@ -742,11 +743,13 @@ async function saveEdit() {
 
         await loadListings();
 
-        await Swal.fire(
-            "完成",
-            "刊登修改成功。",
-            "success",
-        );
+        await openAppAlert({
+            variant: "success",
+            title: "完成",
+            text: "刊登修改成功。",
+            confirmText: "確定",
+            cancelText: "",
+        });
 
     } catch (error) {
         if (error?.response?.status === 401) {
@@ -755,17 +758,13 @@ async function saveEdit() {
             return;
         }
 
-        // 先隱藏修改刊登視窗，避免 SweetAlert2 被遮住。
-        isModalOpen.value = false;
-
-        await Swal.fire(
-            "修改失敗",
-            errorText(error),
-            "error",
-        );
-
-        // 一般修改失敗時，保留原本表單資料並重新開啟視窗。
-        isModalOpen.value = true;
+        await openAppAlert({
+            variant: "error",
+            title: "修改失敗",
+            text: errorText(error),
+            confirmText: "確定",
+            cancelText: "",
+        });
     } finally {
         saving.value = false;
     }
@@ -784,21 +783,22 @@ async function changeStatus(item, kind, status, selectElement) {
         id === undefined ||
         id === ""
     ) {
-        await Swal.fire(
-            "無法修改",
-            "找不到這筆刊登的 ID。",
-            "error",
-        );
+        await openAppAlert({
+            variant: "error",
+            title: "無法修改",
+            text: "找不到這筆刊登的 ID。",
+            confirmText: "確定",
+            cancelText: "",
+        });
         return;
     }
 
-    const confirmed = await Swal.fire({
+    const confirmed = await openAppAlert({
+        variant: "confirm",
         title: "確定要變更刊登狀態嗎？",
         text: `新狀態：${statusLabel(status)}`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "確定",
-        cancelButtonText: "取消",
+        confirmText: "確定",
+        cancelText: "取消",
     });
 
     // 使用者取消時，恢復下拉選單原本的狀態。
@@ -827,22 +827,26 @@ async function changeStatus(item, kind, status, selectElement) {
 
         await loadListings();
 
-        await Swal.fire(
-            "完成",
-            "刊登狀態已更新。",
-            "success",
-        );
+        await openAppAlert({
+            variant: "success",
+            title: "完成",
+            text: "刊登狀態已更新。",
+            confirmText: "確定",
+            cancelText: "",
+        });
     } catch (error) {
         if (error?.response?.status === 401) {
             await handleAuthExpired(error);
             return;
         }
 
-        await Swal.fire(
-            "修改失敗",
-            errorText(error),
-            "error",
-        );
+        await openAppAlert({
+            variant: "error",
+            title: "修改失敗",
+            text: errorText(error),
+            confirmText: "確定",
+            cancelText: "",
+        });
     }
 }
 
@@ -1086,7 +1090,7 @@ onMounted(async () => {
         </template>
 
         <!-- 修改刊登彈窗：保留原本功能 -->
-        <AppModal v-model="isModalOpen" :title="editingKind === 'exchange'
+        <AppModal v-model="isModalOpen" :color="editingKind === 'exchange' ? 'green' : 'blue'" :title="editingKind === 'exchange'
             ? '修改特典刊登'
             : '修改票券刊登'" :busy="saving" :close-on-backdrop="false" width="42rem">
             <form id="my-listing-edit-form" class="my-listing-edit-form" @submit.prevent="saveEdit">
@@ -1445,6 +1449,7 @@ onMounted(async () => {
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
 }
 
 .favorite-member,
@@ -1474,6 +1479,7 @@ onMounted(async () => {
     white-space: pre-wrap;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
 }
 
 /* 票券收藏卡片的敘述區。
@@ -1492,6 +1498,7 @@ onMounted(async () => {
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
 }
 
 /* ========== 票券資訊列 ========== */

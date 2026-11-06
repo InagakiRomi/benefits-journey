@@ -538,7 +538,7 @@ const modalTitle = computed(() => {
       color="purple" @retry="retry" />
 
     <!-- 審核視窗 -->
-    <AppModal v-model="reviewOpen" :title="modalTitle" :busy="submitting" width="48rem" :close-on-backdrop="false">
+    <AppModal v-model="reviewOpen" color="purple" :title="modalTitle" :busy="submitting" width="48rem" :close-on-backdrop="false">
       <template v-if="target">
         <!-- 上方：圖片＋來源＋爬蟲備註 -->
         <div class="report-summary">

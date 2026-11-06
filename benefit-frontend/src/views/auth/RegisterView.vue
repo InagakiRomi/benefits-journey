@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import filmstripIcon from '@iconify-icons/mdi/filmstrip'
-import Swal from 'sweetalert2'
+import { openAppAlert } from '@/components/ui/Alert.vue'
 import http from '@/plugins/axios'
 
 const router = useRouter()
@@ -26,22 +26,24 @@ async function handleRegister() {
     if (!email.value.trim()) missingFields.push('電子郵件')
 
     if (missingFields.length > 0) {
-        await Swal.fire({
-            icon: 'warning',
+        await openAppAlert({
+            variant: 'warning',
             title: '尚有必填欄位未完成',
             text: `${missingFields.join('、')}還沒填寫完成，請補齊後再送出。`,
-            confirmButtonText: '返回填寫',
+            confirmText: '返回填寫',
+            cancelText: '',
         })
         return
     }
 
     // 密碼長度限制：8～16 碼
     if (password.value.length < 8 || password.value.length > 16) {
-        await Swal.fire({
-            icon: 'warning',
+        await openAppAlert({
+            variant: 'warning',
             title: '密碼長度不符',
             text: '密碼長度須為 8～16 碼。',
-            confirmButtonText: '重新輸入',
+            confirmText: '重新輸入',
+            cancelText: '',
         })
         return
     }
@@ -49,11 +51,12 @@ async function handleRegister() {
     
     // 確認密碼必須與密碼一致
     if (password.value !== confirmPassword.value) {
-        await Swal.fire({
-            icon: 'warning',
+        await openAppAlert({
+            variant: 'warning',
             title: '密碼不一致',
             text: '兩次輸入的密碼不相同，請重新確認。',
-            confirmButtonText: '重新輸入',
+            confirmText: '重新輸入',
+            cancelText: '',
         })
         return
     }
@@ -70,11 +73,12 @@ async function handleRegister() {
             birthDate: birthDate.value || null,
         })
 
-        await Swal.fire({
-            icon: 'success',
+        await openAppAlert({
+            variant: 'success',
             title: '註冊成功',
             text: '現在可以使用帳號登入了！',
-            confirmButtonText: '前往登入',
+            confirmText: '前往登入',
+            cancelText: '',
         })
 
         await router.push('/login')
@@ -84,11 +88,12 @@ async function handleRegister() {
             error.response?.data?.detail ||
             '註冊失敗，請確認資料是否正確或帳號是否已被使用'
 
-        await Swal.fire({
-            icon: 'error',
+        await openAppAlert({
+            variant: 'error',
             title: '註冊失敗',
             text: message,
-            confirmButtonText: '返回修改',
+            confirmText: '返回修改',
+            cancelText: '',
         })
     } finally {
         isLoading.value = false

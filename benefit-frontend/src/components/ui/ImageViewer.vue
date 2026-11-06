@@ -26,7 +26,7 @@ function move(step) {
 </script>
 
 <template>
-  <AppModal v-model="open" :title="title" width="48rem">
+  <AppModal v-model="open" color="blue" :title="title" width="48rem">
     <div class="viewer">
       <img v-if="images[index]" :src="images[index]" :alt="`${title} 大圖`" referrerpolicy="no-referrer" />
       <template v-if="images.length > 1">

@@ -1,9 +1,9 @@
-<!-- ========== src/views/ExchangeMyFavoritesView.vue ========== -->
+<!-- ========== src/views/exchange/ExchangeMyFavoritesView.vue ========== -->
 <!-- 會員收藏管理頁面 -->
 <script setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import Swal from "sweetalert2";
+import { openAppAlert } from "@/components/ui/Alert.vue";
 import { useAuth } from "@/composables/useAuth";
 
 import ExchangeFavoriteSection from "@/components/exchange/ExchangeFavoriteSection.vue";
@@ -113,13 +113,12 @@ async function handleAuthExpired(error) {
 
     logout();
 
-    await Swal.fire({
-        icon: "warning",
+    await openAppAlert({
+        variant: "warning",
         title: "登入狀態已失效",
         text: "登入憑證可能已過期或無效，請重新登入後再繼續操作。",
-        confirmButtonText: "前往登入",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
+        confirmText: "前往登入",
+        cancelText: "",
     });
 
     await router.push({
@@ -317,7 +316,13 @@ async function loadFavorites() {
 
 async function removeFavorite(item, kind) {
     if (!token.value) {
-        await Swal.fire("請先登入", "取消收藏需要有效的登入 Token。", "warning");
+        await openAppAlert({
+            variant: "warning",
+            title: "請先登入",
+            text: "取消收藏需要有效的登入 Token。",
+            confirmText: "確定",
+            cancelText: "",
+        });
         return;
     }
 
@@ -325,21 +330,22 @@ async function removeFavorite(item, kind) {
     const id = listingId(listing, kind);
 
     if (!id) {
-        await Swal.fire(
-            "無法取消收藏",
-            "找不到刊登 ID，請確認收藏 API 的回傳格式。",
-            "error",
-        );
+        await openAppAlert({
+            variant: "error",
+            title: "無法取消收藏",
+            text: "找不到刊登 ID，請確認收藏 API 的回傳格式。",
+            confirmText: "確定",
+            cancelText: "",
+        });
         return;
     }
 
-    const confirmed = await Swal.fire({
+    const confirmed = await openAppAlert({
+        variant: "confirm",
         title: "確定取消收藏？",
         text: "取消後，這筆刊登會從你的收藏清單移除。",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "取消收藏",
-        cancelButtonText: "保留收藏",
+        confirmText: "取消收藏",
+        cancelText: "保留收藏",
     });
 
     if (!confirmed.isConfirmed) return;
@@ -353,14 +359,26 @@ async function removeFavorite(item, kind) {
 
         await loadFavorites();
 
-        await Swal.fire("完成", "已取消收藏。", "success");
+        await openAppAlert({
+            variant: "success",
+            title: "完成",
+            text: "已取消收藏。",
+            confirmText: "確定",
+            cancelText: "",
+        });
     } catch (error) {
         if (error?.response?.status === 401) {
             await handleAuthExpired(error);
             return;
         }
 
-        await Swal.fire("操作失敗", errorText(error), "error");
+        await openAppAlert({
+            variant: "error",
+            title: "操作失敗",
+            text: errorText(error),
+            confirmText: "確定",
+            cancelText: "",
+        });
     }
 }
 

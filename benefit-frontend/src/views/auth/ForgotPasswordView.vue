@@ -3,7 +3,7 @@
     import { useRouter } from 'vue-router'
     import { Icon } from '@iconify/vue'
     import filmstripIcon from '@iconify-icons/mdi/filmstrip'
-    import Swal from 'sweetalert2'
+    import { openAppAlert } from '@/components/ui/Alert.vue'
     import http from '@/plugins/axios'
 
     const router = useRouter()
@@ -13,11 +13,12 @@
 
     async function handleForgotPassword() {
     if (!email.value.trim()) {
-        await Swal.fire({
-        icon: 'warning',
+        await openAppAlert({
+        variant: 'warning',
         title: '請輸入電子郵件',
         text: '請填寫註冊時使用的電子郵件',
-        confirmButtonText: '確定',
+        confirmText: '確定',
+        cancelText: '',
         })
         return
     }
@@ -29,11 +30,12 @@
         email: email.value.trim(),
         })
 
-        await Swal.fire({
-        icon: 'success',
+        await openAppAlert({
+        variant: 'success',
         title: '已送出申請',
         text: '如果這個電子郵件符合重設條件，請留意相關通知。',
-        confirmButtonText: '返回登入',
+        confirmText: '返回登入',
+        cancelText: '',
         })
 
         await router.push('/login')
@@ -43,11 +45,12 @@
         error.response?.data?.detail ||
         '目前無法處理重設密碼申請，請稍後再試。'
 
-        await Swal.fire({
-        icon: 'error',
+        await openAppAlert({
+        variant: 'error',
         title: '申請失敗',
         text: message,
-        confirmButtonText: '重新操作',
+        confirmText: '重新操作',
+        cancelText: '',
         })
     } finally {
         isLoading.value = false

@@ -7,6 +7,7 @@ import magnifyIcon from '@iconify-icons/mdi/magnify'
 import filterIcon from '@iconify-icons/mdi/filter-variant'
 
 import PageIntro from '@/components/layout/PageIntro.vue'
+import http from '@/plugins/axios'
 
 const users = ref([])
 const loadingUsers = ref(false)
@@ -44,29 +45,11 @@ const filteredUsers = computed(() => {
     return result
 })
 
-function getToken() {
-    return localStorage.getItem('token')
-}
-
-async function apiRequest(url, options = {}) {
-    const token = getToken()
-
-    const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
-        ...options,
-        headers: {
-            ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...options.headers,
-        },
-    })
-
-    if (!response.ok) {
-        const message = await response.text()
-        throw new Error(message || `請求失敗（${response.status}）`)
-    }
-
-    if (response.status === 204) return null
-    return response.json()
+function readError(error, fallback) {
+    const data = error?.response?.data
+    if (typeof data === 'string' && data.trim()) return data.trim()
+    if (typeof data?.message === 'string' && data.message.trim()) return data.message.trim()
+    return fallback
 }
 
 // 取得會員列表
@@ -75,13 +58,14 @@ async function loadUsers() {
     userError.value = ''
 
     try {
-        const query = statusFilter.value === 'ALL'
-            ? ''
-            : `?status=${encodeURIComponent(statusFilter.value)}`
+        const params = statusFilter.value === 'ALL'
+            ? {}
+            : { status: statusFilter.value }
 
-        users.value = await apiRequest(`/admin/users${query}`)
+        const { data } = await http.get('/admin/users', { params })
+        users.value = data
     } catch (error) {
-        userError.value = error.message || '讀取會員列表失敗'
+        userError.value = readError(error, '讀取會員列表失敗')
     } finally {
         loadingUsers.value = false
     }
@@ -113,15 +97,12 @@ async function updateUserStatus(user) {
     userError.value = ''
 
     try {
-        await apiRequest(`/admin/users/${user.usersId}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status: nextStatus }),
-        })
+        await http.patch(`/admin/users/${user.usersId}/status`, { status: nextStatus })
 
         await loadUsers()
         window.alert(`已${actionText}會員。`)
     } catch (error) {
-        userError.value = error.message || '更新會員狀態失敗'
+        userError.value = readError(error, '更新會員狀態失敗')
     } finally {
         updatingUserId.value = null
     }

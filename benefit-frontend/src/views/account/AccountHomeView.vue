@@ -1,9 +1,43 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
-import Swal from 'sweetalert2'
+import PageIntro from '@/components/layout/PageIntro.vue'
+import { openAppAlert } from '@/components/ui/Alert.vue'
 import http from '@/plugins/axios'
+import accountIcon from '@iconify-icons/mdi/account-circle-outline'
+import clipboardListIcon from '@iconify-icons/mdi/clipboard-list-outline'
+import heartIcon from '@iconify-icons/mdi/heart-outline'
+import giftIcon from '@iconify-icons/mdi/gift-outline'
+import messageIcon from '@iconify-icons/mdi/message-text-outline'
+import feedbackIcon from '@iconify-icons/mdi/comment-text-outline'
+
+const route = useRoute()
+const router = useRouter()
+
+const accountMenus = [
+    { to: '/account', label: '關於我', icon: accountIcon },
+    { to: '/account/listings', label: '我的刊登', icon: clipboardListIcon },
+    { to: '/account/favorites', label: '我的收藏', icon: heartIcon },
+    { to: '/account/benefits', label: '我的特典', icon: giftIcon },
+    { to: '/account/messages', label: '訊息中心', icon: messageIcon },
+    { to: '/account/feedback', label: '意見回饋', icon: feedbackIcon },
+]
+
+const isHome = computed(() => route.name === 'account-home')
+
+function isCurrentMenu(menu) {
+    if (menu.to === '/account/messages') {
+        return route.path === '/account/messages' || route.path.startsWith('/account/messages/')
+    }
+
+    return route.path === menu.to
+}
+
+function goToMenu(menu) {
+    if (isCurrentMenu(menu)) return
+    router.push(menu.to)
+}
 
 const user = ref(null)
 const isLoading = ref(true)
@@ -48,22 +82,31 @@ const accountLinks = [
     },
 ]
 
-// 載入目前登入會員的資料
-onMounted(async () => {
-    try {
-        const response = await http.get('/users/me')
-        user.value = response.data
-    } catch (error) {
-        await Swal.fire({
-            icon: 'error',
-            title: '無法取得會員資料',
-            text: error.response?.data?.message || '請重新登入後再試一次。',
-            confirmButtonText: '確定',
-        })
-    } finally {
-        isLoading.value = false
-    }
-})
+// 只在「關於我」載入會員資料，子頁不重複請求
+watch(
+    isHome,
+    async (home) => {
+        if (!home || user.value) return
+
+        isLoading.value = true
+
+        try {
+            const response = await http.get('/users/me')
+            user.value = response.data
+        } catch (error) {
+            await openAppAlert({
+                variant: 'error',
+                title: '無法取得會員資料',
+                text: error.response?.data?.message || '請重新登入後再試一次。',
+                confirmText: '確定',
+                cancelText: '',
+            })
+        } finally {
+            isLoading.value = false
+        }
+    },
+    { immediate: true },
+)
 
 // 停用目前登入會員的帳號
 async function deactivateAccount() {
@@ -71,15 +114,12 @@ async function deactivateAccount() {
         return
     }
 
-    const result = await Swal.fire({
-        icon: 'warning',
+    const result = await openAppAlert({
+        variant: 'warning',
         title: '確定要停用帳號嗎？',
         text: '停用後，你仍然可以登入帳號，也可以重新啟用帳號。',
-        showCancelButton: true,
-        confirmButtonText: '確定停用',
-        cancelButtonText: '取消',
-        confirmButtonColor: '#dc3545',
-        reverseButtons: true,
+        confirmText: '確定停用',
+        cancelText: '取消',
     })
 
     if (!result.isConfirmed) {
@@ -96,18 +136,20 @@ async function deactivateAccount() {
         // 只更新會員資料，不登出、不清除 Token、不跳轉
         user.value = response.data
 
-        await Swal.fire({
-            icon: 'success',
+        await openAppAlert({
+            variant: 'success',
             title: '帳號已停用',
             text: '帳號狀態已更新為停用，你仍然可以登入並重新啟用帳號。',
-            confirmButtonText: '確定',
+            confirmText: '確定',
+            cancelText: '',
         })
     } catch (error) {
-        await Swal.fire({
-            icon: 'error',
+        await openAppAlert({
+            variant: 'error',
             title: '停用失敗',
             text: error.response?.data?.message || '無法停用帳號，請稍後再試。',
-            confirmButtonText: '確定',
+            confirmText: '確定',
+            cancelText: '',
         })
     } finally {
         isDeactivating.value = false
@@ -120,14 +162,12 @@ async function reactivateAccount() {
         return
     }
 
-    const result = await Swal.fire({
-        icon: 'question',
+    const result = await openAppAlert({
+        variant: 'confirm',
         title: '重新啟用帳號？',
         text: '確認後，帳號狀態將恢復為使用中。',
-        showCancelButton: true,
-        confirmButtonText: '確認啟用',
-        cancelButtonText: '取消',
-        confirmButtonColor: '#198754',
+        confirmText: '確認啟用',
+        cancelText: '取消',
     })
 
     if (!result.isConfirmed) {
@@ -144,18 +184,20 @@ async function reactivateAccount() {
         // 只更新會員資料，不登出、不清除 Token、不跳轉
         user.value = response.data
 
-        await Swal.fire({
-            icon: 'success',
+        await openAppAlert({
+            variant: 'success',
             title: '帳號已重新啟用',
             text: '你的帳號現在已恢復為使用中。',
-            confirmButtonText: '確定',
+            confirmText: '確定',
+            cancelText: '',
         })
     } catch (error) {
-        await Swal.fire({
-            icon: 'error',
+        await openAppAlert({
+            variant: 'error',
             title: '重新啟用失敗',
             text: error.response?.data?.message || '無法重新啟用帳號，請稍後再試。',
-            confirmButtonText: '確定',
+            confirmText: '確定',
+            cancelText: '',
         })
     } finally {
         isDeactivating.value = false
@@ -164,7 +206,18 @@ async function reactivateAccount() {
 </script>
 
 <template>
-    <div class="container py-4 py-md-5">
+    <div class="account-layout">
+        <PageIntro
+            kicker="✦ MEMBER CENTER"
+            lead="會員"
+            mark="中心"
+            description="管理你的會員資料，整理屬於你的特典收藏旅程。"
+            :icon-left="giftIcon"
+            :icon-right="accountIcon"
+            :icon-top="heartIcon"
+        />
+
+        <div v-if="isHome" class="container py-4 py-md-5">
         <div class="mb-4">
             <p class="text-uppercase small fw-bold mb-2 account-eyebrow">
                 MY ACCOUNT
@@ -328,10 +381,113 @@ async function reactivateAccount() {
                 </div>
             </section>
         </template>
+        </div>
+
+        <div v-else class="account-content">
+            <aside class="account-sidebar">
+                <h3 class="sidebar-title">會員功能</h3>
+
+                <nav aria-label="會員中心選單" class="sidebar-menu">
+                    <button
+                        v-for="menu in accountMenus"
+                        :key="menu.to"
+                        type="button"
+                        class="sidebar-item"
+                        :class="{ active: isCurrentMenu(menu) }"
+                        :disabled="isCurrentMenu(menu)"
+                        :aria-current="isCurrentMenu(menu) ? 'page' : undefined"
+                        @click="goToMenu(menu)"
+                    >
+                        <span class="sidebar-icon">
+                            <Icon :icon="menu.icon" />
+                        </span>
+
+                        <span>{{ menu.label }}</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <div class="account-panel">
+                <RouterView />
+            </div>
+        </div>
     </div>
 </template>
 
 <style scoped>
+.account-layout {
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 8px 0 40px;
+}
+
+.account-content {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.account-sidebar,
+.account-panel {
+    min-width: 0;
+    border: 1px solid #f4d9b9;
+    border-radius: 16px;
+    background: #fffdf9;
+    padding: 20px;
+}
+
+.sidebar-title {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #344054;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.sidebar-item:hover:not(:disabled) {
+    background: #fff4dc;
+}
+
+.sidebar-item.active,
+.sidebar-item:disabled {
+    background: #fff0c2;
+    border-color: #ffda8a;
+    color: #805b16;
+    font-weight: 700;
+    cursor: default;
+}
+
+.sidebar-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.account-panel {
+    min-height: 300px;
+}
+
 .account-eyebrow {
     color: #805b16;
     letter-spacing: 0.12em;
@@ -454,5 +610,27 @@ async function reactivateAccount() {
     flex-shrink: 0;
     color: var(--c-muted);
     font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .account-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .account-sidebar,
+    .account-panel {
+        padding: 16px;
+    }
+
+    .sidebar-menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sidebar-item {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
 }
 </style>

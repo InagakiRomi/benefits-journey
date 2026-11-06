@@ -4,7 +4,9 @@
     import { Icon } from '@iconify/vue'
     import { useAuth } from '@/composables/useAuth'
     import filmstripIcon from '@iconify-icons/mdi/filmstrip'
-    import Swal from 'sweetalert2'
+    import eyeIcon from '@iconify-icons/mdi/eye-outline'
+    import eyeOffIcon from '@iconify-icons/mdi/eye-off-outline'
+    import { openAppAlert } from '@/components/ui/Alert.vue'
     import http from '@/plugins/axios'
 
     const router = useRouter()
@@ -12,6 +14,7 @@
 
     const account = ref('')
     const password = ref('')
+    const showPassword = ref(false)
     const isLoading = ref(false)
     // Google 登入按鈕的掛載位置
     const googleButton = ref(null)
@@ -21,11 +24,12 @@
 
     const handleLogin = async () => {
     if (!account.value.trim() || !password.value) {
-        await Swal.fire({
-        icon: 'warning',
+        await openAppAlert({
+        variant: 'warning',
         title: '請填寫完整',
         text: '請輸入帳號與密碼',
-        confirmButtonText: '確定',
+        confirmText: '確定',
+        cancelText: '',
         })
         return
     }
@@ -43,11 +47,12 @@
         // 儲存 JWT Token，讓 Axios 自動附加到後續請求
         auth.login(data.token, data.user)
 
-        await Swal.fire({
-        icon: 'success',
+        await openAppAlert({
+        variant: 'success',
         title: '登入成功',
         text: `歡迎回來，${data.user?.name || data.user?.account || '會員'}！`,
-        confirmButtonText: '開始使用',
+        confirmText: '開始使用',
+        cancelText: '',
         })
 
         // 目前先導向地圖頁
@@ -58,11 +63,12 @@
         error.response?.data?.detail ||
         '帳號或密碼錯誤，請確認後再試一次'
 
-        await Swal.fire({
-        icon: 'error',
+        await openAppAlert({
+        variant: 'error',
         title: '登入失敗',
         text: message,
-        confirmButtonText: '重新輸入',
+        confirmText: '重新輸入',
+        cancelText: '',
         })
     } finally {
         isLoading.value = false
@@ -114,11 +120,12 @@ const handleGoogleLogin = async (response) => {
     if (isLoading.value) return
 
     if (!response?.credential) {
-        await Swal.fire({
-            icon: 'error',
+        await openAppAlert({
+            variant: 'error',
             title: 'Google 登入失敗',
             text: '未能取得 Google 登入憑證，請再試一次',
-            confirmButtonText: '確定',
+            confirmText: '確定',
+            cancelText: '',
         })
         return
     }
@@ -140,11 +147,12 @@ const handleGoogleLogin = async (response) => {
         // 沿用原本的登入狀態與 Token 儲存機制
         auth.login(data.token, data.user)
 
-        await Swal.fire({
-            icon: 'success',
+        await openAppAlert({
+            variant: 'success',
             title: '登入成功',
             text: `歡迎回來，${data.user.name || data.user.account || '會員'}！`,
-            confirmButtonText: '開始使用',
+            confirmText: '開始使用',
+            cancelText: '',
         })
 
         // 沿用原本的登入後導向
@@ -156,11 +164,12 @@ const handleGoogleLogin = async (response) => {
             error.message ||
             'Google 登入失敗，請稍後再試'
 
-        await Swal.fire({
-            icon: 'error',
+        await openAppAlert({
+            variant: 'error',
             title: 'Google 登入失敗',
             text: message,
-            confirmButtonText: '重新嘗試',
+            confirmText: '重新嘗試',
+            cancelText: '',
         })
     } finally {
         isLoading.value = false
@@ -241,16 +250,28 @@ onMounted(async () => {
 
             <div class="mb-4">
             <label for="password" class="form-label">密碼</label>
-            <input
-                id="password"
-                v-model="password"
-                type="password"
-                class="form-control login-input"
-                placeholder="請輸入密碼"
-                autocomplete="current-password"
-                :disabled="isLoading"
-                required
-            />
+            <div class="password-field">
+                <input
+                    id="password"
+                    v-model="password"
+                    :type="showPassword ? 'text' : 'password'"
+                    class="form-control login-input"
+                    placeholder="請輸入密碼"
+                    autocomplete="current-password"
+                    :disabled="isLoading"
+                    required
+                />
+                <button
+                    type="button"
+                    class="password-toggle"
+                    :aria-pressed="showPassword"
+                    :aria-label="showPassword ? '隱藏密碼' : '顯示密碼'"
+                    :disabled="isLoading"
+                    @click="showPassword = !showPassword"
+                >
+                    <Icon :icon="showPassword ? eyeOffIcon : eyeIcon" aria-hidden="true" />
+                </button>
+            </div>
             </div>
 
             <div class="forgot-link">
@@ -363,6 +384,46 @@ onMounted(async () => {
     .login-input:focus {
     border-color: #d9a441;
     box-shadow: 0 0 0 0.2rem rgb(217 164 65 / 18%);
+    }
+
+    .password-field {
+    position: relative;
+    }
+
+    .password-field .login-input {
+    padding-right: 3rem;
+    }
+
+    .password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0.6rem;
+    background: transparent;
+    color: #805b16;
+    font-size: 1.25rem;
+    transform: translateY(-50%);
+    cursor: pointer;
+    }
+
+    .password-toggle:hover:not(:disabled) {
+    background: #fff0c9;
+    }
+
+    .password-toggle:focus-visible {
+    outline: 2px solid #d9a441;
+    outline-offset: 2px;
+    }
+
+    .password-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
     }
 
     .forgot-link {

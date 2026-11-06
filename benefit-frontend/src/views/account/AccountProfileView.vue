@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import http from '@/plugins/axios'
-import Swal from 'sweetalert2'
+import { openAppAlert } from '@/components/ui/Alert.vue'
 
 // 會員資料
 const form = ref({
@@ -43,17 +43,21 @@ async function saveProfile() {
   if (saving.value) return
 
   if (!form.value.name.trim()) {
-    await Swal.fire({
-      icon: 'warning',
+    await openAppAlert({
+      variant: 'warning',
       title: '請輸入姓名或暱稱',
+      confirmText: '確定',
+      cancelText: '',
     })
     return
   }
 
   if (!form.value.email.trim()) {
-    await Swal.fire({
-      icon: 'warning',
+    await openAppAlert({
+      variant: 'warning',
       title: '請輸入電子郵件',
+      confirmText: '確定',
+      cancelText: '',
     })
     return
   }
@@ -67,23 +71,25 @@ async function saveProfile() {
       birthDate: form.value.birthDate || null,
     })
 
-    await Swal.fire({
-      icon: 'success',
+    await openAppAlert({
+      variant: 'success',
       title: '個人資料已更新',
       text: '你的會員資料已成功儲存。',
-      confirmButtonText: '確定',
+      confirmText: '確定',
+      cancelText: '',
     })
 
     // 重新讀取後端資料，確認儲存結果
     await loadProfile()
   } catch (error) {
-    await Swal.fire({
-      icon: 'error',
+    await openAppAlert({
+      variant: 'error',
       title: '更新失敗',
       text:
         error.response?.data?.message ||
         '儲存個人資料時發生錯誤，請稍後再試。',
-      confirmButtonText: '確定',
+      confirmText: '確定',
+      cancelText: '',
     })
   } finally {
     saving.value = false

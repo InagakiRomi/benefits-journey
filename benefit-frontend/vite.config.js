@@ -23,6 +23,8 @@ export default defineConfig(({ command, mode }) => {
     },
   },
     server: {
+      port: 5115,
+      strictPort: true,
       proxy: {
         '/api': {
           target: apiOrigin,

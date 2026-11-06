@@ -308,7 +308,7 @@ async function removeBenefit(row) {
       color="purple" @retry="retry" />
 
     <!-- 編輯視窗 -->
-    <AppModal v-model="editOpen" :title="`編輯：#${editTarget?.benefitId ?? ''}`" :busy="saving" :close-on-backdrop="false">
+    <AppModal v-model="editOpen" color="purple" :title="`編輯：#${editTarget?.benefitId ?? ''}`" :busy="saving" :close-on-backdrop="false">
       <div class="field image-row">
         <a v-if="shownImage" :href="shownImage" target="_blank" rel="noopener noreferrer" class="image-frame"
           title="點擊看原圖">

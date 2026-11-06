@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
 import filmstripIcon from '@iconify-icons/mdi/filmstrip'
-import Swal from 'sweetalert2'
+import { openAppAlert } from '@/components/ui/Alert.vue'
 import http from '@/plugins/axios'
 
     const route = useRoute()
@@ -21,11 +21,12 @@ import http from '@/plugins/axios'
 
     async function handleResetPassword() {
     if (!token.value) {
-        await Swal.fire({
-        icon: 'error',
+        await openAppAlert({
+        variant: 'error',
         title: '重設連結無效',
         text: '網址中沒有重設密碼 Token，請重新申請密碼重設。',
-        confirmButtonText: '前往忘記密碼',
+        confirmText: '前往忘記密碼',
+        cancelText: '',
         })
 
         await router.push('/forgot-password')
@@ -38,11 +39,12 @@ import http from '@/plugins/axios'
         if (!password.value) missingFields.push('新密碼')
         if (!confirmPassword.value) missingFields.push('確認密碼')
 
-        await Swal.fire({
-        icon: 'warning',
+        await openAppAlert({
+        variant: 'warning',
         title: '尚有欄位未填寫',
         text: `${missingFields.join('、')}還沒填寫完成。`,
-        confirmButtonText: '返回填寫',
+        confirmText: '返回填寫',
+        cancelText: '',
         })
         return
     }
@@ -51,21 +53,23 @@ import http from '@/plugins/axios'
         password.value.length < 8 ||
         password.value.length > 16
     ) {
-        await Swal.fire({
-        icon: 'warning',
+        await openAppAlert({
+        variant: 'warning',
         title: '密碼長度不符',
         text: '新密碼長度須為 8～16 碼。',
-        confirmButtonText: '重新輸入',
+        confirmText: '重新輸入',
+        cancelText: '',
         })
         return
     }
 
     if (password.value !== confirmPassword.value) {
-        await Swal.fire({
-        icon: 'warning',
+        await openAppAlert({
+        variant: 'warning',
         title: '密碼不一致',
         text: '兩次輸入的密碼不同，請重新確認。',
-        confirmButtonText: '重新輸入',
+        confirmText: '重新輸入',
+        cancelText: '',
         })
         return
     }
@@ -78,11 +82,12 @@ import http from '@/plugins/axios'
         newPassword: password.value,
         })
 
-        await Swal.fire({
-        icon: 'success',
+        await openAppAlert({
+        variant: 'success',
         title: '密碼重設成功',
         text: '請使用新密碼重新登入。',
-        confirmButtonText: '前往登入',
+        confirmText: '前往登入',
+        cancelText: '',
         })
 
         await router.push('/login')
@@ -92,11 +97,12 @@ import http from '@/plugins/axios'
         error.response?.data?.detail ||
         '重設密碼失敗，連結可能已過期或已經使用，請重新申請。'
 
-        await Swal.fire({
-        icon: 'error',
+        await openAppAlert({
+        variant: 'error',
         title: '重設密碼失敗',
         text: message,
-        confirmButtonText: '我知道了',
+        confirmText: '我知道了',
+        cancelText: '',
         })
     } finally {
         isLoading.value = false

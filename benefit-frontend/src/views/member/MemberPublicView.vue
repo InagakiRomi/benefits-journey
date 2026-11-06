@@ -1,4 +1,4 @@
-<!-- src/views/MemberPublicView.vue -->
+<!-- src/views/member/MemberPublicView.vue -->
 <script setup>
 import {
     ref,

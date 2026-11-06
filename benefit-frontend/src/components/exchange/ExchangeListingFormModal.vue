@@ -318,7 +318,7 @@ function requestClose() {
 </script>
 
 <template>
-    <AppModal :model-value="modelValue" :title="isEditing ? '修改特典刊登' : '新增特典刊登'" :busy="isSaving"
+    <AppModal bare :model-value="modelValue" :title="isEditing ? '修改特典刊登' : '新增特典刊登'" :busy="isSaving"
         :close-on-backdrop="false" width="42rem" @update:model-value="emit('update:modelValue', $event)">
         <div class="exchange-form-modal">
             <form id="exchange-listing-form" class="exchange-listing-form" @submit.prevent="emit('submit')">
@@ -459,36 +459,45 @@ function requestClose() {
 
     <!-- 圖片放大預覽視窗 -->
     <Teleport to="body">
-        <div v-if="isImagePreviewOpen && previewImageUrl" class="image-preview-overlay" role="dialog" aria-modal="true"
-            aria-label="特典圖片放大預覽" @click.self="closeImagePreview">
-            <button type="button" class="image-preview-close" aria-label="關閉圖片預覽" @click="closeImagePreview">
-                <span aria-hidden="true">×</span>
-            </button>
+        <div v-if="isImagePreviewOpen && previewImageUrl" class="image-preview-overlay" @click.self="closeImagePreview">
+            <section class="image-preview-dialog" role="dialog" aria-modal="true" aria-label="特典圖片放大預覽">
+                <TicketCard appear color="green" class="image-preview-ticket" title="特典圖片">
+                    <template #title>
+                        <div class="image-preview-heading">
+                            <span>特典圖片</span>
+                            <button type="button" class="image-preview-close" aria-label="關閉圖片預覽"
+                                @click="closeImagePreview">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                    </template>
 
-            <div class="image-preview-content">
-                <button v-if="hasMultipleImages" type="button" class="image-preview-nav image-preview-nav-prev"
-                    aria-label="查看上一張圖片" title="上一張" @click="previousPreviewImage">
-                    <Icon icon="mdi:chevron-left" aria-hidden="true" />
-                </button>
+                    <div class="image-preview-content">
+                        <button v-if="hasMultipleImages" type="button" class="image-preview-nav image-preview-nav-prev"
+                            aria-label="查看上一張圖片" title="上一張" @click="previousPreviewImage">
+                            <Icon icon="mdi:chevron-left" aria-hidden="true" />
+                        </button>
 
-                <img :key="previewImageUrl" :src="previewImageUrl"
-                    :alt="`${selectedUseBenefit ? useBenefitTitle(selectedUseBenefit) : '持有特典'}－放大預覽`"
-                    class="image-preview-large" @error="handleBenefitImageError(previewImageUrl)" />
+                        <img :key="previewImageUrl" :src="previewImageUrl"
+                            :alt="`${selectedUseBenefit ? useBenefitTitle(selectedUseBenefit) : '持有特典'}－放大預覽`"
+                            class="image-preview-large" @error="handleBenefitImageError(previewImageUrl)" />
 
-                <button v-if="hasMultipleImages" type="button" class="image-preview-nav image-preview-nav-next"
-                    aria-label="查看下一張圖片" title="下一張" @click="nextPreviewImage">
-                    <Icon icon="mdi:chevron-right" aria-hidden="true" />
-                </button>
+                        <button v-if="hasMultipleImages" type="button" class="image-preview-nav image-preview-nav-next"
+                            aria-label="查看下一張圖片" title="下一張" @click="nextPreviewImage">
+                            <Icon icon="mdi:chevron-right" aria-hidden="true" />
+                        </button>
 
-                <p v-if="selectedUseBenefit" class="image-preview-caption">
-                    {{ useBenefitTitle(selectedUseBenefit) }}
-                </p>
+                        <p v-if="selectedUseBenefit" class="image-preview-caption">
+                            {{ useBenefitTitle(selectedUseBenefit) }}
+                        </p>
 
-                <p v-if="hasMultipleImages" class="image-preview-count">
-                    {{ currentImageIndex + 1 }} /
-                    {{ previewImageUrls.length }}
-                </p>
-            </div>
+                        <p v-if="hasMultipleImages" class="image-preview-count">
+                            {{ currentImageIndex + 1 }} /
+                            {{ previewImageUrls.length }}
+                        </p>
+                    </div>
+                </TicketCard>
+            </section>
         </div>
     </Teleport>
 </template>
@@ -811,9 +820,42 @@ textarea.form-control {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 3.5rem 1.5rem 1.5rem;
+    padding: 1.25rem;
     background: rgb(20 20 25 / 88%);
     animation: image-preview-fade-in 0.18s ease;
+}
+
+.image-preview-dialog {
+    width: min(42rem, 100%);
+    min-width: 0;
+}
+
+.image-preview-ticket {
+    width: 100%;
+}
+
+.image-preview-ticket :deep(.ticket-frame),
+.image-preview-ticket :deep(.ticket-frame:hover) {
+    filter: drop-shadow(0 18px 28px rgb(0 0 0 / 35%));
+}
+
+.image-preview-ticket :deep(.ticket),
+.image-preview-ticket :deep(.ticket:hover) {
+    min-height: 0;
+    transform: none;
+}
+
+.image-preview-ticket :deep(.ticket-body h2) {
+    width: 100%;
+}
+
+.image-preview-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
 }
 
 .image-preview-content {
@@ -823,8 +865,6 @@ textarea.form-control {
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    max-width: 1100px;
-    max-height: 100%;
     min-width: 0;
     padding: 0 3.25rem;
 }
@@ -834,17 +874,16 @@ textarea.form-control {
     width: auto;
     height: auto;
     max-width: 100%;
-    max-height: calc(100dvh - 8rem);
+    max-height: calc(100dvh - 16rem);
     object-fit: contain;
     border-radius: 0.5rem;
-    box-shadow: 0 8px 32px rgb(0 0 0 / 30%);
 }
 
 .image-preview-caption,
 .image-preview-count {
     max-width: 100%;
     margin: 0;
-    color: #fff;
+    color: #3e4450;
     font-size: 0.9rem;
     line-height: 1.5;
     text-align: center;
@@ -867,14 +906,11 @@ textarea.form-control {
     height: 2.75rem;
     padding: 0;
     transform: translateY(-50%);
-    border: 1px solid rgb(255 255 255 / 60%);
+    border: 1.5px solid var(--ticket-ink, #0f6e5c);
     border-radius: 50%;
-    background: rgb(255 255 255 / 14%);
-    color: #fff;
+    background: #fff;
+    color: var(--ticket-ink, #0f6e5c);
     cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
 }
 
 .image-preview-nav :deep(svg) {
@@ -883,7 +919,7 @@ textarea.form-control {
 }
 
 .image-preview-nav:hover {
-    background: rgb(255 255 255 / 28%);
+    background: var(--ticket-pale, #e9f8f4);
 }
 
 .image-preview-nav-prev {
@@ -895,37 +931,29 @@ textarea.form-control {
 }
 
 .image-preview-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 3;
     display: grid;
+    flex-shrink: 0;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2.25rem;
+    height: 2.25rem;
     padding: 0;
-    border: 1px solid rgb(255 255 255 / 55%);
-    border-radius: 50%;
-    background: rgb(255 255 255 / 12%);
-    color: #fff;
+    border: 1.5px solid var(--ticket-ink, #0f6e5c);
+    border-radius: 0.7rem;
+    background: #fff;
+    color: var(--ticket-ink, #0f6e5c);
     font-family: inherit;
-    font-size: 2rem;
-    font-weight: 400;
+    font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
-    transition:
-        background-color 0.2s ease,
-        transform 0.2s ease;
 }
 
 .image-preview-close:hover {
-    background: rgb(255 255 255 / 25%);
-    transform: scale(1.05);
+    background: var(--ticket-pale, #e9f8f4);
 }
 
 .image-preview-close:focus-visible,
 .image-preview-nav:focus-visible {
-    outline: 2px solid #fff;
+    outline: 2px solid var(--ticket-ink, #0f6e5c);
     outline-offset: 3px;
 }
 
@@ -1117,7 +1145,7 @@ textarea.form-control {
     }
 
     .image-preview-overlay {
-        padding: 3.5rem 0.5rem 1rem;
+        padding: 0.75rem;
     }
 
     .image-preview-content {
@@ -1126,14 +1154,7 @@ textarea.form-control {
 
     .image-preview-large {
         max-width: 100%;
-        max-height: calc(100dvh - 7rem);
-    }
-
-    .image-preview-close {
-        top: 0.65rem;
-        right: 0.65rem;
-        width: 2.5rem;
-        height: 2.5rem;
+        max-height: calc(100dvh - 14rem);
     }
 
     .image-preview-nav {

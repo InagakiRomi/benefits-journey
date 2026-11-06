@@ -479,7 +479,8 @@ function onFollowChange() {
     </div>
 
     <!-- 事件詳細視窗 -->
-    <AppModal v-model="detailOpen" :title="detail ? EVENT_TYPES[detail.eventType]?.label : ''" width="34rem">
+    <AppModal v-model="detailOpen" :color="detail?.eventType === 'MOVIE_RELEASE' ? 'yellow' : 'orange'"
+      :title="detail ? EVENT_TYPES[detail.eventType]?.label : ''" width="34rem">
       <div v-if="detail" class="detail" :class="EVENT_TYPES[detail.eventType]?.cls">
         <div class="detail-image">
           <img v-if="imageOf(detail)" :src="imageOf(detail)" :alt="eventTitle(detail)" referrerpolicy="no-referrer"

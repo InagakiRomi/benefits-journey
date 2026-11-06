@@ -1,4 +1,4 @@
-<!-- ========== views/ExchangeView.vue ========== -->
+<!-- ========== src/views/exchange/ExchangeView.vue ========== -->
 <!-- 交易專區主頁：管理路由、頁面初始化及子元件資料傳遞。 -->
 <script setup>
 import {
@@ -6,7 +6,7 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
-import Swal from "sweetalert2";
+import { openAppAlert } from "@/components/ui/Alert.vue";
 import AppModal from "@/components/ui/AppModal.vue";
 import PageIntro from "@/components/layout/PageIntro.vue";
 import giftIcon from "@iconify-icons/mdi/gift-outline";
@@ -91,13 +91,12 @@ async function handleAuthExpired(error) {
     // 使用組員既有的 logout()，不修改共用登入程式。
     logout();
 
-    await Swal.fire({
-        icon: "warning",
+    await openAppAlert({
+        variant: "warning",
         title: "登入狀態已失效",
         text: "登入憑證可能已過期或無效，請重新登入後再繼續操作。",
-        confirmButtonText: "前往登入",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
+        confirmText: "前往登入",
+        cancelText: "",
     });
 
     await goToLogin();
@@ -154,13 +153,12 @@ const {
 async function openChat(listing) {
     // 1. 未登入時，不呼叫聊天室 API。
     if (!isLoggedIn.value || !token.value) {
-        const result = await Swal.fire({
-            icon: "info",
+        const result = await openAppAlert({
+            variant: "info",
             title: "請先登入",
             text: "登入會員後才能聯絡刊登者。",
-            confirmButtonText: "前往登入",
-            showCancelButton: true,
-            cancelButtonText: "取消",
+            confirmText: "前往登入",
+            cancelText: "取消",
         });
 
         if (result.isConfirmed) {
@@ -178,11 +176,12 @@ async function openChat(listing) {
         targetUserId === undefined ||
         targetUserId === ""
     ) {
-        await Swal.fire({
-            icon: "error",
+        await openAppAlert({
+            variant: "error",
             title: "無法開啟聊天室",
             text: "交換刊登資料缺少刊登者會員 ID，請確認後端回傳資料。",
-            confirmButtonText: "確定",
+            confirmText: "確定",
+            cancelText: "",
         });
 
         return;
@@ -240,14 +239,15 @@ async function openChat(listing) {
 
         console.error("開啟聊天室失敗：", error);
 
-        await Swal.fire({
-            icon: "error",
+        await openAppAlert({
+            variant: "error",
             title: "無法開啟聊天室",
             text:
                 error?.response?.data?.message ||
                 error?.message ||
                 "請稍後再試。",
-            confirmButtonText: "確定",
+            confirmText: "確定",
+            cancelText: "",
         });
     }
 }

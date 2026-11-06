@@ -2,6 +2,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import PageIntro from '@/components/layout/PageIntro.vue'
+import http from '@/plugins/axios'
 import { Icon } from '@iconify/vue'
 import historyIcon from '@iconify-icons/mdi/history'
 import refreshIcon from '@iconify-icons/mdi/refresh'
@@ -36,27 +37,11 @@ function hasActiveSearch() {
     )
 }
 
-// 取得 Token
-function getToken() {
-    return localStorage.getItem('token')
-}
-
-// 共用 API 請求
-async function apiRequest(url) {
-    const token = getToken()
-
-    const response = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
-        headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-    })
-
-    if (!response.ok) {
-        const message = await response.text()
-        throw new Error(message || `請求失敗（${response.status}）`)
-    }
-
-    return response.json()
+function readError(error, fallback) {
+    const data = error?.response?.data
+    if (typeof data === 'string' && data.trim()) return data.trim()
+    if (typeof data?.message === 'string' && data.message.trim()) return data.message.trim()
+    return fallback
 }
 
 // 取得登入日誌
@@ -65,38 +50,33 @@ async function loadLoginLogs(page = 0) {
     logError.value = ''
 
     try {
-        let url
+        const params = { page }
 
         if (hasActiveSearch()) {
-            const params = new URLSearchParams()
-            params.set('page', String(page))
-
-            // 只傳送有填寫的條件
             if (activeMemberKeyword.value) {
-                params.set('memberKeyword', activeMemberKeyword.value)
+                params.memberKeyword = activeMemberKeyword.value
             }
 
             if (activeDeviceKeyword.value) {
-                params.set('deviceKeyword', activeDeviceKeyword.value)
+                params.deviceKeyword = activeDeviceKeyword.value
             }
 
             if (activeIpKeyword.value) {
-                params.set('ipKeyword', activeIpKeyword.value)
+                params.ipKeyword = activeIpKeyword.value
             }
-
-            url = `/admin/login-logs/search?${params.toString()}`
-        } else {
-            url = `/admin/login-logs?page=${page}`
         }
 
-        const result = await apiRequest(url)
+        const endpoint = hasActiveSearch()
+            ? '/admin/login-logs/search'
+            : '/admin/login-logs'
+        const { data: result } = await http.get(endpoint, { params })
 
         loginLogs.value = result.content || []
         logPage.value = result.number ?? page
         logTotalPages.value = result.totalPages ?? 0
         logTotalElements.value = result.totalElements ?? 0
     } catch (error) {
-        logError.value = error.message || '讀取登入日誌失敗'
+        logError.value = readError(error, '讀取登入日誌失敗')
     } finally {
         loadingLogs.value = false
     }
