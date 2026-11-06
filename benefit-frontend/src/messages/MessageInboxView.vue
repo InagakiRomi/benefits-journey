@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Client } from '@stomp/stompjs'
 import http from '@/plugins/axios'
 import { useAuth } from '@/composables/useAuth'
+import { getWebSocketUrl } from '@/utils/websocketUrl'
 
 const router = useRouter()
 const auth = useAuth()
@@ -24,35 +25,6 @@ const currentUserId = computed(() => {
   const user = auth.user.value
   return user?.usersId ?? user?.users_id ?? user?.userId ?? user?.id ?? null
 })
-
-// WebSocket 連線網址：本機透過 Vite 代理，正式環境連後端
-function getWebSocketUrl() {
-  if (import.meta.env.DEV) {
-    const protocol =
-      window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-
-    return `${protocol}//${window.location.host}/ws`
-  }
-
-  const apiBaseUrl = import.meta.env.VITE_API_URL
-  let apiUrl
-
-  try {
-    apiUrl = new URL(
-      apiBaseUrl || 'https://movie-benefit-map.onrender.com',
-      window.location.origin
-    )
-  } catch {
-    apiUrl = new URL('https://movie-benefit-map.onrender.com')
-  }
-
-  if (apiUrl.hostname.endsWith('github.io')) {
-    apiUrl = new URL('https://movie-benefit-map.onrender.com')
-  }
-
-  const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${apiUrl.host}/ws`
-}
 
 // 取得目前會員的聊天室列表
 async function loadConversations() {

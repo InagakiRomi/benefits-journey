@@ -8,8 +8,8 @@
 - UI 與地圖套件：Bootstrap 5、Bootstrap Icons、Iconify、SweetAlert2、Leaflet（含 MarkerCluster）、FullCalendar
 - HTTP：Axios
 - 部署：GitHub Pages
-- 線上體驗：[https://benefitsjourney.github.io/movie-benefit-map/map](https://benefitsjourney.github.io/movie-benefit-map/map)
-- 後端 API：由獨立的 Spring Boot 服務提供，正式環境為 [https://movie-benefit-map.onrender.com](https://movie-benefit-map.onrender.com)
+- 線上體驗：[https://benefitsjourney.github.io/benefits-journey/map](https://benefitsjourney.github.io/benefits-journey/map)
+- 後端 API：由獨立的 Spring Boot 服務提供，正式環境為 [https://benefits-journey.onrender.com](https://benefits-journey.onrender.com)
 
 ## 主要頁面與功能
 
@@ -73,6 +73,6 @@ npm run build
 npm run preview
 ```
 
-`npm run build` 的靜態資源前綴為 `/movie-benefit-map/`，供 GitHub Pages 使用。`npm run dev` 仍以網站根路徑 `/` 提供頁面。
+`npm run build` 的靜態資源前綴為 `/benefits-journey/`，供 GitHub Pages 使用。`npm run dev` 仍以網站根路徑 `/` 提供頁面。
 
 完整專案介紹與測試入口請見 [專案首頁](../README.md)。
