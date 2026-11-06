@@ -541,3 +541,62 @@ tbody tr:hover td.is-empty {
   border-bottom-color: var(--sheet-head);
 }
 </style>
+
+<!-- 操作欄在插槽裡，不帶本元件的 scope，所以這段不用 scoped。 -->
+<style>
+.data-sheet .sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.data-sheet .sheet-actions .app-button {
+  min-height: 2.15rem;
+  padding: 0.22rem 0.7rem;
+  gap: 0.25rem;
+  box-shadow: none;
+}
+
+.data-sheet .sheet-actions .app-button svg {
+  font-size: 1rem;
+}
+
+.data-sheet .sheet-actions .app-button:hover:not(:disabled) {
+  transform: none;
+}
+
+.data-sheet .sheet-actions:has(> :nth-child(3)) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.data-sheet .sheet-actions:has(> :nth-child(3)) > .app-button {
+  width: 100%;
+}
+
+/* 預設最後一行拉滿。單數個項目時，最後一個會自己佔一整列。 */
+.data-sheet .sheet-actions:has(> :nth-child(3)) > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.data-sheet .sheet-actions:has(> :nth-child(3)) > :last-child:nth-child(odd):not(.app-button) {
+  justify-self: center;
+  width: auto;
+}
+
+/* 各頁可加上 is-span-first，改成第一行拉滿。 */
+.data-sheet .sheet-actions.is-span-first:has(> :nth-child(3)) > :last-child {
+  grid-column: auto;
+}
+
+.data-sheet .sheet-actions.is-span-first:has(> :nth-child(3)) > :first-child {
+  grid-column: 1 / -1;
+}
+
+.data-sheet .sheet-actions.is-span-first:has(> :nth-child(3)) > :first-child:not(.app-button) {
+  justify-self: center;
+  width: auto;
+}
+</style>

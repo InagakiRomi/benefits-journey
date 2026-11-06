@@ -11,7 +11,7 @@ const benefitLinks = [
     title: "我的收藏庫",
     description: "記錄領到的特典，拍照留念",
     stamp: "收藏",
-    color: "pink",
+    color: "yellow",
     to: "/collection",
   },
   {
@@ -47,9 +47,7 @@ const benefitLinks = [
         :detail="item.description"
       >
         <template #action>
-          <RouterLink class="ticket-link" :to="item.to">
-            前往
-          </RouterLink>
+          <RouterLink class="ticket-link" :to="item.to"> 前往 </RouterLink>
         </template>
       </TicketCard>
     </div>

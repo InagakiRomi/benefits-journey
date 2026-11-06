@@ -14,6 +14,7 @@ export const COLORS = {
 <script setup>
 import { computed } from "vue";
 import { Icon } from "@iconify/vue";
+import { RouterLink } from "vue-router";
 
 const props = defineProps({
   type: {
@@ -38,18 +39,39 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  to: {
+    type: [String, Object],
+    default: null,
+  },
+  target: {
+    type: String,
+    default: null,
+  },
 });
 
 const buttonStyle = computed(() => COLORS[props.color] ?? COLORS.coral);
+const isLink = computed(() => props.to != null && props.to !== "");
 </script>
 
 <template>
-  <button class="app-button" :class="variant" :type="type" :disabled="disabled" :style="buttonStyle">
+  <component
+    :is="isLink ? RouterLink : 'button'"
+    class="app-button"
+    :class="variant"
+    :type="isLink ? undefined : type"
+    :to="isLink ? to : undefined"
+    :target="isLink ? target : undefined"
+    :rel="isLink && target === '_blank' ? 'noopener noreferrer' : undefined"
+    :disabled="isLink ? undefined : disabled"
+    :aria-disabled="isLink && disabled ? 'true' : undefined"
+    :tabindex="isLink && disabled ? -1 : undefined"
+    :style="buttonStyle"
+  >
     <slot name="icon">
       <Icon v-if="icon" :icon="icon" aria-hidden="true" />
     </slot>
     <slot />
-  </button>
+  </component>
 </template>
 
 <style scoped>
@@ -69,6 +91,7 @@ const buttonStyle = computed(() => COLORS[props.color] ?? COLORS.coral);
   line-height: 1.5;
   font-weight: 800;
   white-space: nowrap;
+  text-decoration: none;
   cursor: pointer;
   box-shadow: 0 8px 16px color-mix(in srgb, var(--btn-bg) 28%, transparent);
   transition:

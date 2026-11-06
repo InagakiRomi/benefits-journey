@@ -227,7 +227,7 @@ function goToPage(next) {
             </div>
           </template>
           <template #cell-actions="{ row }">
-            <div class="movie-actions">
+            <div class="sheet-actions">
               <AppButton type="button" color="purple" variant="outline" :icon="eyeIcon"
                 @click="openDetail(row.movieId)">
                 詳細
@@ -251,19 +251,6 @@ function goToPage(next) {
 <style scoped>
 .movie-sheet {
   scroll-margin-top: 5.5rem;
-}
-
-.movie-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.movie-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.8rem;
-  box-shadow: none;
 }
 
 .visible-switch {

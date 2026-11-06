@@ -291,7 +291,7 @@ onMounted(loadFeedback);
             </div>
           </template>
           <template #cell-actions="{ row }">
-            <div class="feedback-actions">
+            <div class="sheet-actions">
               <AppButton
                 type="button"
                 color="purple"
@@ -422,17 +422,6 @@ onMounted(loadFeedback);
   color: var(--c-muted);
   font-size: var(--text-min);
   font-weight: 700;
-}
-
-.feedback-actions {
-  display: flex;
-  justify-content: center;
-}
-
-.feedback-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.8rem;
-  box-shadow: none;
 }
 
 .feedback-content {

@@ -514,7 +514,7 @@ const modalTitle = computed(() => {
         <DataTable caption="特典回報資料表" :columns="columns" :rows="reports" row-key="benefitReportId"
           empty-text="目前沒有符合條件的回報。" :loading="loading" theme="purple">
           <template #cell-actions="{ row }">
-            <div class="row-actions">
+            <div class="sheet-actions">
               <AppButton v-if="isPending" type="button" color="purple" :icon="pencilIcon" @click="openReview(row)">
                 審核
               </AppButton>
@@ -743,20 +743,6 @@ const modalTitle = computed(() => {
 <style scoped>
 .report-sheet {
   scroll-margin-top: 5.5rem;
-}
-
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-}
-
-.row-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.9rem;
-  box-shadow: none;
 }
 
 .source-link {

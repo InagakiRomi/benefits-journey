@@ -287,13 +287,17 @@ async function removeBenefit(row) {
           </template>
 
           <template #cell-actions="{ row }">
-            <div class="row-actions">
-              <RouterLink class="view-link" :to="`/benefits/${row.benefitId}`" target="_blank" title="看前台頁面">
-                <Icon :icon="linkIcon" aria-hidden="true" />
-                前台
-              </RouterLink>
+            <div class="sheet-actions">
               <AppButton type="button" color="purple" variant="outline" :icon="pencilIcon" @click="openEdit(row)">編輯</AppButton>
               <AppButton type="button" color="purple" variant="outline" :icon="deleteIcon" @click="removeBenefit(row)">刪除</AppButton>
+              <AppButton
+                color="purple"
+                variant="outline"
+                :icon="linkIcon"
+                :to="`/benefits/${row.benefitId}`"
+                target="_blank"
+                title="看前台頁面"
+              >前台</AppButton>
             </div>
           </template>
         </DataTable>
@@ -374,28 +378,6 @@ async function removeBenefit(row) {
 <style scoped>
 .benefit-sheet {
   scroll-margin-top: 5.5rem;
-}
-
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.row-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.8rem;
-  box-shadow: none;
-}
-
-.view-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  color: #8d72ed;
-  font-weight: 800;
 }
 
 .date-row {

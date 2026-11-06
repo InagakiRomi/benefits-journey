@@ -247,7 +247,7 @@ onMounted(loadUsers);
         theme="purple"
       >
         <template #cell-actions="{ row }">
-          <div class="user-actions">
+          <div class="sheet-actions">
             <AppButton
               v-if="nextAction(row)"
               type="button"
@@ -282,15 +282,3 @@ onMounted(loadUsers);
   </section>
 </template>
 
-<style scoped>
-.user-actions {
-  display: flex;
-  justify-content: center;
-}
-
-.user-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.8rem;
-  box-shadow: none;
-}
-</style>
