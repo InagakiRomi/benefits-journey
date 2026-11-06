@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 public class CorsOrigins {
 
     private static final List<String> PERMANENT_ORIGINS = List.of(
-            "https://benefitsjourney.github.io",
-            "https://movie-benefit-map.onrender.com");
+            "https://inagakiromi.github.io",
+            "https://benefits-journey.onrender.com");
 
     private static final List<String> LOCAL_PATTERNS = List.of(
             "http://localhost:*",

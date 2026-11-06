@@ -134,7 +134,7 @@ async function removeReport(row) {
           </template>
 
           <template #cell-actions="{ row }">
-            <div class="row-actions">
+            <div class="sheet-actions">
               <RouterLink class="view-link" :to="`/benefits/${row.benefitId}`" target="_blank" title="看前台特典頁">
                 <Icon :icon="linkIcon" aria-hidden="true" />
                 前台
@@ -162,13 +162,6 @@ async function removeReport(row) {
 <style scoped>
 .report-sheet {
   scroll-margin-top: 5.5rem;
-}
-
-.row-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
 }
 
 .view-link {

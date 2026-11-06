@@ -1,4 +1,4 @@
-<!-- src/views/MemberPublicView.vue -->
+<!-- src/views/member/MemberPublicView.vue -->
 <script setup>
 import {
     ref,
@@ -20,6 +20,11 @@ import heartOutlineIcon from '@iconify-icons/mdi/heart-outline'
 import chatIcon from '@iconify-icons/mdi/chat-outline'
 import closeIcon from '@iconify-icons/mdi/close'
 import TicketCard from '@/components/ui/TicketCard.vue'
+import PageIntro from '@/components/layout/PageIntro.vue'
+import ResultBanner from '@/components/layout/ResultBanner.vue'
+import StatePanel from '@/components/layout/StatePanel.vue'
+import DetailCard from '@/components/layout/DetailCard.vue'
+import AppButton from '@/components/ui/Button.vue'
 import http from '@/plugins/axios'
 import {
     getMyExchangeFavorites,
@@ -730,63 +735,59 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="member-public-page container py-4">
-        <div v-if="loading" class="text-center py-5">
-            <div class="spinner-border" role="status" aria-label="載入中"></div>
-            <p class="mt-3">正在載入會員資料...</p>
-        </div>
+    <section>
+        <PageIntro
+            kicker="✦ MEMBER"
+            lead="會員"
+            mark="公開頁"
+            description="看看這位會員公開的特典與票券刊登。"
+            :icon-left="accountIcon"
+            :icon-right="giftIcon"
+            :icon-top="ticketIcon"
+        />
 
-        <div v-else-if="errorMessage" class="alert alert-warning">
-            {{ errorMessage }}
-
-            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" @click="loadMemberPage">
-                重新載入
-            </button>
-        </div>
+        <StatePanel v-if="loading" variant="loading" message="正在載入會員資料…" :icon="accountIcon" />
+        <StatePanel
+            v-else-if="errorMessage"
+            variant="error"
+            title="目前無法取得會員資料"
+            :message="errorMessage"
+            @retry="loadMemberPage"
+        />
 
         <template v-else-if="member">
-            <!-- 會員基本資料：保留原本版型 -->
-            <section class="member-card card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="member-avatar">
-                            <i class="bi bi-person-fill"></i>
-                        </div>
+            <DetailCard :title="member.name || member.account || '會員'" :title-icon="accountIcon">
+                <template #actions>
+                    <AppButton type="button" :icon="chatIcon" @click="sendPrivateMessage">
+                        傳送私訊
+                    </AppButton>
+                </template>
 
+                <section class="detail-section">
+                    <h3>會員資料</h3>
+                    <dl>
                         <div>
-                            <h2 class="mb-1">
-                                {{ member.name || member.account || '會員' }}
-                            </h2>
-
-                            <p class="text-secondary mb-1">
-                                帳號：{{ member.account || '尚無資料' }}
-                            </p>
-
-                            <p class="text-secondary small mb-0">
-                                加入日期：{{ formatDate(member.createdAt) }}
-                            </p>
-
-                            <button type="button" class="btn btn-success mt-3" @click="sendPrivateMessage">
-                                <i class="bi bi-chat-dots me-2"></i>
-                                傳送私訊
-                            </button>
+                            <dt>帳號</dt>
+                            <dd>{{ member.account || '尚無資料' }}</dd>
                         </div>
-                    </div>
-                </div>
-            </section>
+                        <div>
+                            <dt>加入日期</dt>
+                            <dd>{{ formatDate(member.createdAt) }}</dd>
+                        </div>
+                    </dl>
+                </section>
+            </DetailCard>
 
-            <!-- 特典交換刊登 -->
-            <section class="listing-section mb-4">
-                <div class="section-heading">
-                    <h3>特典刊登</h3>
-                    <span>{{ exchangeListings.length }} 筆</span>
-                </div>
+            <section class="listing-section">
+                <ResultBanner
+                    :icon="giftIcon"
+                    title="特典刊登"
+                    :count="exchangeListings.length"
+                    unit-text="筆公開刊登"
+                    empty-text="這位會員目前沒有公開的交換刊登。"
+                />
 
-                <div v-if="exchangeListings.length === 0" class="empty-state">
-                    這位會員目前沒有公開的交換刊登。
-                </div>
-
-                <div v-else class="ticket-grid exchange-ticket-grid">
+                <div v-if="exchangeListings.length" class="ticket-grid exchange-ticket-grid">
                     <TicketCard v-for="(item, index) in exchangeListings" :key="getExchangeListingId(item) ?? index"
                         class="exchange-public-card" color="green" :appear="index < 6">
 
@@ -885,18 +886,16 @@ onBeforeUnmount(() => {
                 </div>
             </section>
 
-            <!-- 票券刊登 -->
             <section class="listing-section">
-                <div class="section-heading">
-                    <h3>票券刊登</h3>
-                    <span>{{ ticketListings.length }} 筆</span>
-                </div>
+                <ResultBanner
+                    :icon="ticketIcon"
+                    title="票券刊登"
+                    :count="ticketListings.length"
+                    unit-text="筆公開刊登"
+                    empty-text="這位會員目前沒有公開的票券刊登。"
+                />
 
-                <div v-if="ticketListings.length === 0" class="empty-state">
-                    這位會員目前沒有公開的票券刊登。
-                </div>
-
-                <div v-else class="ticket-grid ticket-public-grid">
+                <div v-if="ticketListings.length" class="ticket-grid ticket-public-grid">
                     <TicketCard v-for="(item, index) in ticketListings" :key="getTicketListingId(item) ?? index"
                         color="blue" :appear="index < 6" class="ticket-listing-card" role="button" tabindex="0"
                         :aria-label="`查看票券刊登：${item.title || '未命名刊登'}`" @click="openTicketDetail(item)"
@@ -1249,7 +1248,7 @@ onBeforeUnmount(() => {
                 </div>
             </Transition>
         </Teleport>
-    </div>
+    </section>
 </template>
 
 <style scoped>

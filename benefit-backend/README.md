@@ -97,7 +97,7 @@
 
 ### 資料庫
 
-- 未設定 `DB_TYPE` 時使用 `mssql`。連線寫在 `application.yml`：本機 SQL Server `localhost:14330`，資料庫 `BenefitsJourney`。帳密只留在該設定檔，本文件不列出。
+- 未設定 `DB_TYPE` 時使用 `mssql`。連線寫在 `application.yml`：本機 SQL Server `localhost:14330`，資料庫 `BenefitsJourney`，帳號 `sa`。密碼在 `.env` 的 `DB_PASSWORD`。
 - `DB_TYPE=h2` 會改走 `application-h2.yml`，使用檔案型 H2（`./data/h2/BenefitsJourney`）。Render 映像即採此設定；表由 JPA 建立，空資料庫再由 `SqlDataInitializer` 匯入種子 SQL。
 
 ### 環境變數
@@ -109,6 +109,7 @@
 | 變數 | 沒設會怎樣 |
 | --- | --- |
 | `MAIL_USERNAME`、`MAIL_PASSWORD` | Gmail SMTP 帳號與應用程式密碼，寫在 `.env`。`application.yml` 沒有預設值，沒設服務起不來。用來寄忘記密碼信（`POST /auth/password/forgot`）。帳密只留在 `.env`，本文件不列出。 |
+| `DB_PASSWORD` | 本機 SQL Server 的 `sa` 密碼，寫在 `.env`。`DB_TYPE=h2` 時不用。 |
 
 #### 選填（沒設仍可啟動）
 

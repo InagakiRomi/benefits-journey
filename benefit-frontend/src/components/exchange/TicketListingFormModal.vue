@@ -179,7 +179,7 @@ function handleSubmit(event) {
 </script>
 
 <template>
-    <AppModal :model-value="modelValue" :title="isEditing ? '修改票券刊登' : '新增票券刊登'" :busy="isSaving"
+    <AppModal bare :model-value="modelValue" :title="isEditing ? '修改票券刊登' : '新增票券刊登'" :busy="isSaving"
         :close-on-backdrop="false" width="42rem" @update:model-value="emit('update:modelValue', $event)">
         <div class="ticket-form-modal">
             <form id="ticket-listing-form" class="ticket-listing-form" @submit.prevent="handleSubmit">

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 import clipboardIcon from "@iconify-icons/mdi/clipboard-check-outline";
 import sourceBranchIcon from "@iconify-icons/mdi/source-branch";
 import tableIcon from "@iconify-icons/mdi/table-large";
@@ -8,6 +9,7 @@ import sortIcon from "@iconify-icons/mdi/sort";
 import shapeIcon from "@iconify-icons/mdi/shape-outline";
 import checkIcon from "@iconify-icons/mdi/check";
 import closeIcon from "@iconify-icons/mdi/close";
+import eyeIcon from "@iconify-icons/mdi/eye-outline";
 
 import http from "@/plugins/axios";
 import { countyLabel } from "@/constants/county";
@@ -27,6 +29,7 @@ import DataTable, { dateTimeText } from "@/components/ui/DataTable.vue";
 import Pagination from "@/components/ui/Pagination.vue";
 import AppButton from "@/components/ui/Button.vue";
 
+const router = useRouter();
 const PAGE_SIZE = 20;
 const CRAWLER_TYPE_OPTIONS = [
   { value: "CINEMA", label: "影城" },
@@ -171,7 +174,7 @@ const columns = [
     align: "center",
     format: dateTimeText,
   },
-  { key: "actions", label: "操作", minWidth: "12rem", align: "center" },
+  { key: "actions", label: "操作", minWidth: "13.5rem", align: "center" },
 ];
 
 const requestParams = computed(() => {
@@ -213,6 +216,16 @@ const loadError = computed(() => collectionLoadError(errorStatus.value, "目前�
 
 function choiceDisabled(row) {
   return isReviewed(row) || actingId.value === row.cinemaMovieReviewId;
+}
+
+function openEntityDetail(row) {
+  const id = row?.entityId;
+  const routeName = {
+    CINEMA: "admin-cinema-detail",
+    MOVIE: "admin-movie-detail",
+  }[row?.crawlerType];
+  if (id == null || !routeName) return;
+  router.push({ name: routeName, params: { id } });
 }
 
 function goToPage(next) {
@@ -307,7 +320,7 @@ async function changeStatus(row, reviewStatus) {
             {{ reviewEntityName(row) }}
           </template>
           <template #cell-actions="{ row }">
-            <div class="review-actions">
+            <div class="sheet-actions">
               <AppButton type="button" color="purple" :icon="checkIcon" :disabled="choiceDisabled(row)"
                 :class="{ 'is-settled': isReviewed(row) }" @click="changeStatus(row, 'APPROVED')">
                 同意
@@ -316,6 +329,10 @@ async function changeStatus(row, reviewStatus) {
                 :disabled="choiceDisabled(row)" :class="{ 'is-settled': isReviewed(row) }"
                 @click="changeStatus(row, 'REJECTED')">
                 不同意
+              </AppButton>
+              <AppButton type="button" color="purple" variant="outline" :icon="eyeIcon"
+                :disabled="row.entityId == null" @click="openEntityDetail(row)">
+                詳細
               </AppButton>
             </div>
           </template>
@@ -338,20 +355,7 @@ async function changeStatus(row, reviewStatus) {
   scroll-margin-top: 5.5rem;
 }
 
-.review-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.4rem;
-}
-
-.review-actions :deep(.app-button) {
-  min-height: 2.25rem;
-  padding: 0.3rem 0.8rem;
-  box-shadow: none;
-}
-
-.review-actions :deep(.app-button.is-settled) {
+.sheet-actions :deep(.app-button.is-settled) {
   border: 1.5px solid var(--btn-bg);
   background: transparent;
   color: var(--btn-bg);

@@ -11,38 +11,37 @@ import AdminMovieView from '@/views/admin/cinema-movie/AdminMovieView.vue'
 import AdminMovieDetail from '@/views/admin/cinema-movie/AdminMovieDetail.vue'
 import AdminMovieForm from '@/views/admin/cinema-movie/AdminMovieForm.vue'
 import AdminCrawlerReviewView from '@/views/admin/cinema-movie/AdminCrawlerReviewView.vue'
-import AdminBenefitReportView from '@/views/admin/AdminBenefitReportView.vue'
-import AdminBenefitView from '@/views/admin/AdminBenefitView.vue'
-import AdminInventoryReportView from '@/views/admin/AdminInventoryReportView.vue'
-import AdminExcelExportView from '@/views/admin/AdminExcelExportView.vue'
-import BenefitView from '@/views/BenefitView.vue'
-import BenefitDetailView from '@/views/BenefitDetailView.vue'
-import CollectionView from '@/views/CollectionView.vue'
-import MyReportView from '@/views/MyReportView.vue'
-import BenefitReportFormView from '@/views/BenefitReportFormView.vue'
-import CalendarView from '@/views/CalendarView.vue'
-import ReminderView from '@/views/ReminderView.vue'
-import RankingView from '@/views/RankingView.vue'
-import CinemaView from '@/views/CinemaView.vue'
-import MapView from '@/views/MapView.vue'
-import MovieView from '@/views/MovieView.vue'
-import LoginView from '@/views/LoginView.vue'
-import RegisterView from '@/views/RegisterView.vue'
-import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
-import ResetPasswordView from '@/views/ResetPasswordView.vue'
-import AccountHomeView from '@/account/AccountHomeView.vue'
-import AccountProfileView from '@/account/AccountProfileView.vue'
-import AccountBenefitsView from '@/account/AccountBenefitsView.vue'
-import AccountFeedbackView from '@/account/AccountFeedbackView.vue'
-import AdminUsersView from '@/views/admin/AdminUsersView.vue'
-import AdminLoginLogsView from '@/views/admin/AdminLoginLogsView.vue'
-import AdminFeedbackView from '@/views/admin/AdminFeedbackView.vue'
-import AccountLayout from '@/layouts/AccountLayout.vue'
-import MessageInboxView from '@/messages/MessageInboxView.vue'
-import MessageConversationView from '@/messages/MessageConversationView.vue'
-import ExchangeView from "@/views/ExchangeView.vue"
-import ExchangeMyFavoritesView from '@/views/ExchangeMyFavoritesView.vue'
-import ExchangeMyListingsView from '@/views/ExchangeMyListingsView.vue'
+import AdminBenefitReportView from '@/views/admin/benefit/AdminBenefitReportView.vue'
+import AdminBenefitView from '@/views/admin/benefit/AdminBenefitView.vue'
+import AdminInventoryReportView from '@/views/admin/benefit/AdminInventoryReportView.vue'
+import AdminExcelExportView from '@/views/admin/excel/AdminExcelExportView.vue'
+import BenefitView from '@/views/benefit/BenefitView.vue'
+import BenefitDetailView from '@/views/benefit/BenefitDetailView.vue'
+import CollectionView from '@/views/benefit/CollectionView.vue'
+import MyReportView from '@/views/benefit/MyReportView.vue'
+import BenefitReportFormView from '@/views/benefit/BenefitReportFormView.vue'
+import CalendarView from '@/views/calendar/CalendarView.vue'
+import ReminderView from '@/views/calendar/ReminderView.vue'
+import RankingView from '@/views/ranking/RankingView.vue'
+import CinemaView from '@/views/cinema-movie/CinemaView.vue'
+import MapView from '@/views/map/MapView.vue'
+import MovieView from '@/views/cinema-movie/MovieView.vue'
+import LoginView from '@/views/auth/LoginView.vue'
+import RegisterView from '@/views/auth/RegisterView.vue'
+import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
+import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
+import AccountHomeView from '@/views/account/AccountHomeView.vue'
+import AccountProfileView from '@/views/account/AccountProfileView.vue'
+import AccountBenefitsView from '@/views/account/AccountBenefitsView.vue'
+import AccountFeedbackView from '@/views/account/AccountFeedbackView.vue'
+import AdminUsersView from '@/views/admin/member/AdminUsersView.vue'
+import AdminLoginLogsView from '@/views/admin/member/AdminLoginLogsView.vue'
+import AdminFeedbackView from '@/views/admin/member/AdminFeedbackView.vue'
+import MessageInboxView from '@/views/messages/MessageInboxView.vue'
+import MessageConversationView from '@/views/messages/MessageConversationView.vue'
+import ExchangeView from '@/views/exchange/ExchangeView.vue'
+import ExchangeMyFavoritesView from '@/views/exchange/ExchangeMyFavoritesView.vue'
+import ExchangeMyListingsView from '@/views/exchange/ExchangeMyListingsView.vue'
 
 
 const router = createRouter({
@@ -68,53 +67,6 @@ const router = createRouter({
       path: '/reset-password',
       name: 'reset-password',
       component: ResetPasswordView,
-    },
-    {
-      path: '/account',
-      component: AccountLayout,
-      meta: { requiresAuth: true },
-      children: [
-        {
-          path: '',
-          name: 'account-home',
-          component: AccountHomeView,
-        },
-        {
-          path: 'profile',
-          name: 'account-profile',
-          component: AccountProfileView,
-        },
-        {
-          path: 'benefits',
-          name: 'account-benefits',
-          component: AccountBenefitsView,
-        },
-        {
-          path: 'listings',
-          name: 'account-listings',
-          component: ExchangeMyListingsView,
-        },
-        {
-          path: 'favorites',
-          name: 'account-favorites',
-          component: ExchangeMyFavoritesView,
-        },
-        {
-          path: 'feedback',
-          name: 'account-feedback',
-          component: AccountFeedbackView,
-        },
-        {
-          path: 'messages',
-          name: 'account-messages',
-          component: MessageInboxView,
-        },
-        {
-          path: 'messages/:conversationId',
-          name: 'message-conversation',
-          component: MessageConversationView,
-        },
-      ],
     },
     {
       path: '/',
@@ -185,7 +137,7 @@ const router = createRouter({
         {
           path: 'members/:id',
           name: 'member-public',
-          component: () => import('@/views/MemberPublicView.vue'),
+          component: () => import('@/views/member/MemberPublicView.vue'),
         },
         {
           path: 'exchange',
@@ -196,6 +148,61 @@ const router = createRouter({
           path: 'ticket',
           name: 'ticket',
           component: ExchangeView,
+        },
+        {
+          path: 'account',
+          component: AccountHomeView,
+          meta: { requiresAuth: true },
+          children: [
+            {
+              path: '',
+              name: 'account-home',
+              component: { render: () => null },
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'profile',
+              name: 'account-profile',
+              component: AccountProfileView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'benefits',
+              name: 'account-benefits',
+              component: AccountBenefitsView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'listings',
+              name: 'account-listings',
+              component: ExchangeMyListingsView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'favorites',
+              name: 'account-favorites',
+              component: ExchangeMyFavoritesView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'feedback',
+              name: 'account-feedback',
+              component: AccountFeedbackView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'messages',
+              name: 'account-messages',
+              component: MessageInboxView,
+              meta: { requiresAuth: true },
+            },
+            {
+              path: 'messages/:conversationId',
+              name: 'message-conversation',
+              component: MessageConversationView,
+              meta: { requiresAuth: true },
+            },
+          ],
         },
       ],
     },

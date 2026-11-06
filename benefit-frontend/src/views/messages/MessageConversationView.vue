@@ -1,12 +1,20 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { Client } from '@stomp/stompjs'
 import http from '@/plugins/axios'
 import { useAuth } from '@/composables/useAuth'
+import { getWebSocketUrl } from '@/utils/websocketUrl'
+import PageIntro from '@/components/layout/PageIntro.vue'
+import StatePanel from '@/components/layout/StatePanel.vue'
+import BackLink from '@/components/layout/BackLink.vue'
+import AppButton from '@/components/ui/Button.vue'
+import messageIcon from '@iconify-icons/mdi/message-text-outline'
+import accountIcon from '@iconify-icons/mdi/account-outline'
+import refreshIcon from '@iconify-icons/mdi/refresh'
+import sendIcon from '@iconify-icons/mdi/send'
 
 const route = useRoute()
-const router = useRouter()
 const auth = useAuth()
 
 // 目前聊天室 ID
@@ -40,35 +48,6 @@ const messageList = ref(null)
 // WebSocket
 let stompClient = null
 let conversationSubscription = null
-
-// WebSocket 連線網址：本機透過 Vite 代理，正式環境連後端
-function getWebSocketUrl() {
-  if (import.meta.env.DEV) {
-    const protocol =
-      window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-
-    return `${protocol}//${window.location.host}/ws`
-  }
-
-  const apiBaseUrl = import.meta.env.VITE_API_URL
-  let apiUrl
-
-  try {
-    apiUrl = new URL(
-      apiBaseUrl || 'https://movie-benefit-map.onrender.com',
-      window.location.origin
-    )
-  } catch {
-    apiUrl = new URL('https://movie-benefit-map.onrender.com')
-  }
-
-  if (apiUrl.hostname.endsWith('github.io')) {
-    apiUrl = new URL('https://movie-benefit-map.onrender.com')
-  }
-
-  const protocol = apiUrl.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${apiUrl.host}/ws`
-}
 
 // 載入聊天室資料與訊息
 async function loadConversation() {
@@ -383,11 +362,6 @@ function getMessageParts(content) {
   return parts.length ? parts : [{ text, url: null }]
 }
 
-// 返回訊息列表
-function backToInbox() {
-  router.push({ name: 'account-messages' })
-}
-
 // 進入頁面時先載入訊息，再建立 WebSocket
 onMounted(async () => {
   await loadConversation()
@@ -416,66 +390,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="message-conversation py-4">
+  <section class="message-conversation">
+    <PageIntro
+      kicker="✦ CONVERSATION"
+      lead="私人"
+      mark="聊天室"
+      description="和這位會員繼續對話。"
+      :icon-left="messageIcon"
+      :icon-right="accountIcon"
+      :icon-top="sendIcon"
+    />
+
     <div class="chat-card">
-      <!-- 聊天室標題 -->
       <div class="chat-header">
-        <button
-          type="button"
-          class="btn btn-outline-secondary back-btn"
-          @click="backToInbox"
-        >
-          <i class="bi bi-arrow-left"></i>
-          返回
-        </button>
+        <BackLink to="/account/messages">返回訊息</BackLink>
 
         <div class="chat-user">
-          <div class="avatar">
-            <i class="bi bi-person-fill"></i>
-          </div>
-
           <div>
             <h2 class="chat-title">
               {{ conversation?.otherUserName || '私人聊天室' }}
             </h2>
-            <p class="chat-subtitle mb-0">私人訊息</p>
+            <p class="chat-subtitle">私人訊息</p>
           </div>
         </div>
 
-        <button
-          type="button"
-          class="btn btn-outline-secondary refresh-btn"
-          :disabled="loading"
-          @click="loadConversation"
-        >
-          <i class="bi bi-arrow-clockwise"></i>
+        <AppButton type="button" variant="outline" :icon="refreshIcon" :disabled="loading" @click="loadConversation">
           重新載入
-        </button>
+        </AppButton>
       </div>
 
-      <!-- 載入中 -->
-      <div v-if="loading" class="chat-state">
-        <div
-          class="spinner-border"
-          role="status"
-          aria-label="載入中"
-        ></div>
-        <p class="mt-3 mb-0">正在載入聊天訊息...</p>
-      </div>
+      <StatePanel v-if="loading" variant="loading" message="正在載入聊天訊息…" :icon="messageIcon" />
+      <StatePanel
+        v-else-if="errorMessage"
+        variant="error"
+        title="目前無法取得對話"
+        :message="errorMessage"
+        @retry="loadConversation"
+      />
 
-      <!-- 載入失敗 -->
-      <div v-else-if="errorMessage" class="chat-state">
-        <p class="text-danger">{{ errorMessage }}</p>
-        <button
-          type="button"
-          class="btn btn-success"
-          @click="loadConversation"
-        >
-          再試一次
-        </button>
-      </div>
-
-      <!-- 訊息內容 -->
       <template v-else>
         <div ref="messageList" class="chat-messages">
           <div v-if="messages.length === 0" class="no-messages">
@@ -538,19 +490,9 @@ onUnmounted(() => {
               @keydown.enter.exact.prevent="sendMessage"
             ></textarea>
 
-            <button
-              type="submit"
-              class="btn btn-success send-btn"
-              :disabled="sending || !messageContent.trim()"
-            >
-              <span
-                v-if="sending"
-                class="spinner-border spinner-border-sm"
-                aria-hidden="true"
-              ></span>
-              <i v-else class="bi bi-send-fill"></i>
+            <AppButton type="submit" :icon="sendIcon" :disabled="sending || !messageContent.trim()">
               {{ sending ? '傳送中' : '傳送' }}
-            </button>
+            </AppButton>
           </div>
 
           <div class="input-hint">
@@ -559,24 +501,20 @@ onUnmounted(() => {
         </form>
       </template>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
 .message-conversation {
   width: 100%;
-  max-width: 1100px;
   min-width: 0;
-  margin: 0 auto;
-  padding-right: 1.25rem;
-  padding-left: 1.25rem;
-  color: #405b49;
+  color: var(--c-ink);
 
-  --mint: #a8d5ba;
-  --mint-light: #edf6f0;
-  --mint-dark: #365844;
-  --border: #e0ece3;
-  --muted: #84968b;
+  --mint: #ff7049;
+  --mint-light: #fff3ee;
+  --mint-dark: #9a4632;
+  --border: var(--c-border);
+  --muted: var(--c-muted);
 }
 
 .chat-card {
@@ -586,10 +524,10 @@ onUnmounted(() => {
   min-width: 0;
   min-height: 600px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  background: #fff;
-  box-shadow: 0 4px 16px rgb(87 130 99 / 8%);
+  border: 1.5px solid var(--c-border);
+  border-radius: 22px;
+  background: var(--c-card);
+  box-shadow: var(--shadow-soft);
 }
 
 .chat-header {

@@ -8,9 +8,11 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  const apiOrigin = env.VITE_API_ORIGIN || 'http://localhost:8080'
+
   return {
-  // 正式 build 才加上 GitHub Pages 的 /movie-benefit-map/ 前綴
-  base: env.VITE_BASE_PATH || (command === 'build' ? '/movie-benefit-map/' : '/'),
+  // 網站基底路徑，見 .env / .env.production 的 VITE_BASE_PATH
+  base: env.VITE_BASE_PATH || (command === 'build' ? '/benefits-journey/' : '/'),
   plugins: [
     vue(),
     vueDevTools(),
@@ -21,14 +23,16 @@ export default defineConfig(({ command, mode }) => {
     },
   },
     server: {
+      port: 5115,
+      strictPort: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: apiOrigin,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, ''),
         },
         '/ws': {
-          target: 'http://localhost:8080',
+          target: apiOrigin,
           ws: true,
         },
       },

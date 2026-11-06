@@ -933,6 +933,13 @@ onBeforeUnmount(() => {
                     <Icon :icon="giftIcon" aria-hidden="true" />
                     <span>{{ formatBenefitCount(cinema.benefitCount) }}</span>
                   </span>
+                  <span
+                    v-if="nearbyActive && cinema.distanceText"
+                    class="ticket-distance"
+                  >
+                    <Icon :icon="pinIcon" aria-hidden="true" />
+                    <span>距離 {{ cinema.distanceText }}</span>
+                  </span>
                 </span>
               </span>
             </button>
@@ -1295,7 +1302,7 @@ onBeforeUnmount(() => {
   overscroll-behavior: contain;
 }
 
-/* 影城卡片左側保留編號票根，內容只顯示名稱與特典。 */
+/* 影城卡片左側保留編號票根；附近搜尋時一併顯示目前距離。 */
 .location-ticket {
   flex-shrink: 0;
   width: 100%;
@@ -1375,10 +1382,11 @@ onBeforeUnmount(() => {
 
 .ticket-benefit-row {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.65rem;
+  justify-content: space-between;
+  gap: 0.35rem 0.65rem;
 }
 
 .ticket-benefits {
@@ -1390,6 +1398,28 @@ onBeforeUnmount(() => {
   font-size: var(--text-control);
   line-height: 1.45;
   font-weight: 800;
+}
+
+.ticket-distance {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+  color: var(--map-muted);
+  font-size: var(--text-min);
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.ticket-distance :deep(svg) {
+  display: block;
+  flex: none;
+  width: 1.05em;
+  height: 1.05em;
+  font-size: inherit;
+  color: #c47b62;
 }
 
 .location-ticket:hover:not(.is-disabled) {

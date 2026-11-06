@@ -6,6 +6,7 @@ import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import { Icon } from "@iconify/vue";
 import { useRouter } from "vue-router";
 
+import TicketCard from "@/components/ui/TicketCard.vue";
 import ticketIcon from "@iconify-icons/mdi/ticket";
 import accountIcon from "@iconify-icons/mdi/account";
 import calendarIcon from "@iconify-icons/mdi/calendar";
@@ -301,22 +302,21 @@ watch(
         <Teleport to="body">
             <div v-if="selectedListing" class="detail-modal-overlay" @click.self="closeDetail">
                 <section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
-                    <div class="detail-modal-card">
-                        <!-- 標題及關閉按鈕 -->
-                        <header class="detail-modal-header">
-                            <div class="detail-modal-heading">
+                    <TicketCard appear color="blue" class="detail-modal-ticket" :title="listingTitle(selectedListing)">
+                        <template #title>
+                            <div class="detail-ticket-heading">
                                 <Icon :icon="ticketIcon" aria-hidden="true" />
 
-                                <h2 id="detail-modal-title" class="detail-modal-title">
+                                <span id="detail-modal-title" class="detail-modal-title">
                                     {{ listingTitle(selectedListing) }}
-                                </h2>
-                            </div>
+                                </span>
 
-                            <button type="button" class="detail-ticket-close" aria-label="關閉詳細資訊" title="關閉"
-                                @click="closeDetail">
-                                <Icon :icon="closeIcon" aria-hidden="true" />
-                            </button>
-                        </header>
+                                <button type="button" class="detail-ticket-close" aria-label="關閉詳細資訊" title="關閉"
+                                    @click="closeDetail">
+                                    <Icon :icon="closeIcon" aria-hidden="true" />
+                                </button>
+                            </div>
+                        </template>
 
                         <div class="detail-modal-content">
                             <!-- 刊登者：比照 ExchangeFavoriteSection.vue -->
@@ -387,15 +387,16 @@ watch(
                             </section>
                         </div>
 
-                        <!-- 詳細視窗底部操作：保留取消收藏功能 -->
-                        <footer class="detail-modal-footer">
-                            <button type="button" class="detail-favorite-button" :disabled="!listingId(selectedListing)"
-                                @click="removeFavoriteFromDetail">
-                                <Icon :icon="heartIcon" aria-hidden="true" />
-                                取消收藏
-                            </button>
-                        </footer>
-                    </div>
+                        <template #action>
+                            <div class="detail-modal-footer">
+                                <button type="button" class="ticket-link detail-favorite-button"
+                                    :disabled="!listingId(selectedListing)" @click="removeFavoriteFromDetail">
+                                    <Icon :icon="heartIcon" aria-hidden="true" />
+                                    取消收藏
+                                </button>
+                            </div>
+                        </template>
+                    </TicketCard>
                 </section>
             </div>
         </Teleport>
@@ -483,6 +484,7 @@ watch(
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
 }
 
 .favorite-member {
@@ -510,6 +512,7 @@ watch(
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
 }
 
 .favorite-ticket-details {
@@ -619,40 +622,42 @@ watch(
     overscroll-behavior: contain;
 }
 
-.detail-modal-card {
-    overflow: hidden;
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 20px 60px rgb(0 0 0 / 25%);
+.detail-modal-ticket {
+    width: 100%;
 }
 
-.detail-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f8fafc;
+.detail-modal-ticket :deep(.ticket-frame),
+.detail-modal-ticket :deep(.ticket-frame:hover) {
+    filter: drop-shadow(0 18px 28px rgb(15 23 42 / 28%));
 }
 
-.detail-modal-heading {
+.detail-modal-ticket :deep(.ticket),
+.detail-modal-ticket :deep(.ticket:hover) {
+    min-height: 0;
+    transform: none;
+}
+
+.detail-modal-ticket :deep(.ticket-body h2) {
+    width: 100%;
+}
+
+.detail-ticket-heading {
     display: flex;
     align-items: center;
-    flex: 1;
     gap: 0.65rem;
+    width: 100%;
     min-width: 0;
 }
 
-.detail-modal-heading :deep(svg) {
+.detail-ticket-heading > :deep(svg) {
     flex-shrink: 0;
     width: 1.4rem;
     height: 1.4rem;
-    color: #334155;
+    color: var(--ticket-ink);
 }
 
 .detail-modal-title {
+    flex: 1;
     min-width: 0;
     margin: 0;
     color: #334155;
@@ -694,7 +699,6 @@ watch(
     min-width: 0;
     max-height: 60vh;
     max-height: 60dvh;
-    padding: 1rem 1.25rem;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -833,13 +837,12 @@ watch(
 /* 詳細視窗底部操作 */
 .detail-modal-footer {
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
     gap: 0.65rem;
-    padding: 0.85rem 1.1rem;
-    border-top: 1px solid #e5e7eb;
-    background: #f8fafc;
+    min-width: 0;
 }
 
 .detail-favorite-button {
@@ -931,13 +934,8 @@ watch(
         max-height: calc(100dvh - 1.5rem);
     }
 
-    .detail-modal-header {
-        padding: 0.9rem;
-    }
-
     .detail-modal-content {
         max-height: 58dvh;
-        padding: 0.9rem;
     }
 
     .detail-modal-title {
@@ -951,7 +949,6 @@ watch(
 
     .detail-modal-footer {
         justify-content: stretch;
-        padding: 0.8rem;
     }
 
     .detail-favorite-button {
