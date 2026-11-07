@@ -35,11 +35,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.collection.benefitsjourney.domain.BenefitBean;
 import com.collection.benefitsjourney.domain.CinemaBean;
+import com.collection.benefitsjourney.domain.CinemaMovieBenefitBean;
+import com.collection.benefitsjourney.domain.MovieBean;
 import com.collection.benefitsjourney.dto.CinemaMovie.CinemaExploreResponse;
 import com.collection.benefitsjourney.dto.CinemaMovie.CinemaRequest;
 import com.collection.benefitsjourney.dto.CinemaMovie.CinemaResponse;
 import com.collection.benefitsjourney.dto.PageResponse;
+import com.collection.benefitsjourney.enums.BenefitInventoryStatus;
 import com.collection.benefitsjourney.enums.CinemaMovie.CinemaSort;
 import com.collection.benefitsjourney.enums.County;
 import com.collection.benefitsjourney.enums.SortOrder;
@@ -156,51 +160,85 @@ class CinemaServiceTest {
     class FindCinemaBenefitsTests {
 
         @Test
-        @DisplayName("列表應附上上架特典筆數，沒有特典的影城為 0")
+        @DisplayName("列表應沿用地圖查詢，並附上同一份上架特典")
         void shouldAttachBenefitCount() {
             CinemaBean withBenefits = cinema(100, null, "信義威秀");
             withBenefits.setCinemaAddress("台北市信義區松壽路20號");
             withBenefits.setOfficialWebsiteUrl("https://www.example.com/");
             CinemaBean withoutBenefits = cinema(101, null, "京站威秀");
-            when(cinemaRepository.findAllByFilters(
-                    nullable(String.class), nullable(County.class),
-                    eq(true), eq(true),
-                    eq(false), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(withBenefits, withoutBenefits)));
-            when(cinemaMovieBenefitRepository.countApprovedByCinemaIds(List.of(100, 101)))
-                    .thenReturn(List.<Object[]>of(new Object[] { 100, 2L }));
+            when(cinemaRepository.findAllForMap(
+                    nullable(String.class), nullable(County.class)))
+                    .thenReturn(List.of(withBenefits, withoutBenefits));
+            when(cinemaMovieBenefitRepository.findApprovedByCinemaIds(
+                    eq(List.of(100, 101)), isNull(), isNull()))
+                    .thenReturn(List.of(
+                            benefit(11, withBenefits, 201, "電影甲", 301, "海報"),
+                            benefit(12, withBenefits, 202, "電影乙", 302, "明信片")));
 
             PageResponse<CinemaExploreResponse> result = cinemaService.findCinemaBenefits(
                     null, null, null,
                     1, 20, CinemaSort.SortBy.CINEMA_ID, SortOrder.ASC);
 
             assertEquals(2, result.content().get(0).benefitCount());
+            assertEquals(List.of(11, 12), result.content().get(0).benefits().stream()
+                    .map(item -> item.cinemaMovieBenefitId())
+                    .toList());
             assertEquals(0, result.content().get(1).benefitCount());
+            assertTrue(result.content().get(1).benefits().isEmpty());
             assertEquals("信義威秀", result.content().get(0).cinemaName());
             assertEquals("https://www.example.com/", result.content().get(0).officialWebsiteUrl());
         }
 
         @Test
-        @DisplayName("hasBenefit 為 true 時只查有上架特典的影城")
+        @DisplayName("hasBenefit 為 true 時只留下有上架特典的影城")
         void shouldFilterCinemasWithBenefits() {
-            when(cinemaRepository.findAllByFilters(
-                    any(String.class), eq(County.TAIPEI),
-                    eq(true), eq(true),
-                    eq(true), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of()));
+            CinemaBean withBenefits = cinema(100, null, "信義威秀");
+            CinemaBean withoutBenefits = cinema(101, null, "京站威秀");
+            when(cinemaRepository.findAllForMap(
+                    any(String.class), eq(County.TAIPEI)))
+                    .thenReturn(List.of(withBenefits, withoutBenefits));
+            when(cinemaMovieBenefitRepository.findApprovedByCinemaIds(
+                    eq(List.of(100, 101)), isNull(), isNull()))
+                    .thenReturn(List.of(
+                            benefit(11, withBenefits, 201, "電影甲", 301, "海報")));
 
-            cinemaService.findCinemaBenefits(
+            PageResponse<CinemaExploreResponse> result = cinemaService.findCinemaBenefits(
                     "威秀", County.TAIPEI, true,
                     1, 10, CinemaSort.SortBy.CINEMA_ID, SortOrder.ASC);
 
             ArgumentCaptor<String> keywordCaptor = ArgumentCaptor.forClass(String.class);
-            verify(cinemaRepository).findAllByFilters(
-                    keywordCaptor.capture(), eq(County.TAIPEI),
-                    eq(true), eq(true),
-                    eq(true), any(Pageable.class));
+            verify(cinemaRepository).findAllForMap(
+                    keywordCaptor.capture(), eq(County.TAIPEI));
             assertTrue(keywordCaptor.getValue().contains("威秀"));
-            verify(cinemaMovieBenefitRepository, never()).countApprovedByCinemaIds(any());
+            assertEquals(1, result.totalElements());
+            assertEquals(100, result.content().get(0).cinemaId());
+            assertEquals(1, result.content().get(0).benefitCount());
         }
+    }
+
+    private CinemaMovieBenefitBean benefit(
+            Integer id,
+            CinemaBean cinema,
+            Integer movieId,
+            String movieName,
+            Integer benefitId,
+            String benefitName) {
+
+        MovieBean movie = new MovieBean();
+        movie.setMovieId(movieId);
+        movie.setMovieName(movieName);
+
+        BenefitBean benefit = new BenefitBean();
+        benefit.setBenefitId(benefitId);
+        benefit.setBenefitName(benefitName);
+
+        CinemaMovieBenefitBean link = new CinemaMovieBenefitBean();
+        link.setCinemaMovieBenefitId(id);
+        link.setCinema(cinema);
+        link.setMovie(movie);
+        link.setBenefit(benefit);
+        link.setBenefitInventoryStatus(BenefitInventoryStatus.IN_STOCK.getCode());
+        return link;
     }
 
     @Nested

@@ -10,7 +10,6 @@ import popcornIcon from "@iconify-icons/mdi/popcorn";
 import giftIcon from "@iconify-icons/mdi/gift-outline";
 import externalIcon from "@iconify-icons/mdi/open-in-new";
 
-import http from "@/plugins/axios";
 import { COUNTY_LABELS, countyLabel, countyTicketColor } from "@/constants/county";
 import { CINEMA_SORT_DEFAULT } from "@/constants/sort";
 import { useApiCollection } from "@/composables/useApiCollection";
@@ -103,15 +102,14 @@ function goToPage(next) {
 }
 
 const detailCinemaId = ref(null);
-const detailBenefits = ref([]);
-const detailLoading = ref(false);
-const detailFailed = ref(false);
-const detailCache = new Map();
-let detailRequest = 0;
+
+function benefitItems(cinema) {
+  return Array.isArray(cinema?.benefits) ? cinema.benefits : [];
+}
 
 function benefitCountOf(cinema) {
   const count = Number(cinema?.benefitCount);
-  return Number.isInteger(count) && count >= 0 ? count : 0;
+  return Number.isInteger(count) && count >= 0 ? count : benefitItems(cinema).length;
 }
 
 function dialogDetail(cinema) {
@@ -129,53 +127,17 @@ function canViewBenefits(cinema) {
   return benefitCountOf(cinema) > 0;
 }
 
-const detailCinema = computed(() => {
-  const cinema = cinemas.value.find((item) => item.cinemaId === detailCinemaId.value);
-  if (!cinema) return null;
-  return {
-    ...cinema,
-    benefits: detailBenefits.value,
-    benefitCount: benefitCountOf(cinema),
-  };
-});
+const detailCinema = computed(
+  () => cinemas.value.find((item) => item.cinemaId === detailCinemaId.value) ?? null,
+);
 
 function closeBenefitDetail() {
-  detailRequest += 1;
   detailCinemaId.value = null;
-  detailBenefits.value = [];
-  detailLoading.value = false;
-  detailFailed.value = false;
 }
 
-async function openBenefitDetail(cinema) {
-  const cinemaId = cinema?.cinemaId;
-  if (cinemaId == null || !canViewBenefits(cinema)) return;
-  const requestId = ++detailRequest;
-  detailCinemaId.value = cinemaId;
-  detailFailed.value = false;
-
-  const cached = detailCache.get(cinemaId);
-  if (cached && Date.now() - cached.savedAt <= CACHE_TTL_MS) {
-    detailBenefits.value = cached.benefits;
-    detailLoading.value = false;
-    return;
-  }
-
-  detailBenefits.value = [];
-  detailLoading.value = true;
-  try {
-    const { data } = await http.get(`/cinemas/${cinemaId}/benefits/status`);
-    if (requestId !== detailRequest) return;
-    if (!Array.isArray(data)) throw new Error("影城特典 API 回傳格式有誤");
-    detailBenefits.value = data;
-    detailCache.set(cinemaId, { benefits: data, savedAt: Date.now() });
-  } catch (error) {
-    if (requestId !== detailRequest) return;
-    console.error("影城特典載入失敗", error);
-    detailFailed.value = true;
-  } finally {
-    if (requestId === detailRequest) detailLoading.value = false;
-  }
+function openBenefitDetail(cinema) {
+  if (cinema?.cinemaId == null || !canViewBenefits(cinema)) return;
+  detailCinemaId.value = cinema.cinemaId;
 }
 </script>
 
@@ -226,8 +188,8 @@ async function openBenefitDetail(cinema) {
     <StatePanel v-else-if="error" variant="error" title="目前無法取得影城資料" message="請確認連線後再試一次。" @retry="retry" />
 
     <BenefitDialog v-if="detailCinema" :title="detailCinema.cinemaName || '影城'" :detail="dialogDetail(detailCinema)"
-      :benefits="detailCinema.benefits" headline-key="movieName" headline-fallback="尚未提供電影名稱" :loading="detailLoading"
-      :error="detailFailed" close-label="關閉" empty-text="這間影城目前沒有特典" @close="closeBenefitDetail" />
+      :benefits="benefitItems(detailCinema)" headline-key="movieName" headline-fallback="尚未提供電影名稱"
+      close-label="關閉" empty-text="這間影城目前沒有特典" @close="closeBenefitDetail" />
   </section>
 </template>
 

@@ -5,8 +5,9 @@ import static com.collection.benefitsjourney.exception.ExceptionUtils.badRequest
 import static com.collection.benefitsjourney.exception.ExceptionUtils.conflict;
 import static com.collection.benefitsjourney.exception.ExceptionUtils.notFound;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.core.TypedPropertyPath;
@@ -63,7 +64,10 @@ public class CinemaService {
         return PageResponse.from(result);
     }
 
-    /** 前台影城列表 */
+    /**
+     * 前台影城列表。影城與特典都沿用地圖的查詢：
+     * 先取營業且可顯示的影城，再一次取出上架特典，最後才排序與分頁。
+     */
     public PageResponse<CinemaExploreResponse> findCinemaBenefits(
             String keyword,
             County county,
@@ -73,25 +77,69 @@ public class CinemaService {
             CinemaSort.SortBy orderBy,
             SortOrder sort) {
 
-        Page<CinemaBean> cinemas = cinemaRepository.findAllByFilters(
+        PageRequest request = PageRequest.of(page - 1, size);
+        List<CinemaBean> cinemas = cinemaRepository.findAllForMap(
                 LikeKeywords.toLikeKeyword(keyword),
-                county,
-                true,
-                true,
-                Boolean.TRUE.equals(hasBenefit),
-                pageRequest(page, size, orderBy, sort));
-
-        List<Integer> cinemaIds = cinemas.getContent().stream()
-                .map((CinemaBean cinema) -> cinema.getCinemaId())
+                county);
+        List<Integer> cinemaIds = cinemas.stream()
+                .map(CinemaBean::getCinemaId)
                 .toList();
-        Map<Integer, Integer> counts = cinemaIds.isEmpty()
-                ? Map.of()
-                : ApprovedBenefitCounts.from(
-                        cinemaMovieBenefitRepository.countApprovedByCinemaIds(cinemaIds));
+        CinemaBenefitLookup.Group benefits = CinemaBenefitLookup.load(
+                cinemaMovieBenefitRepository,
+                cinemaIds,
+                null,
+                null,
+                hasBenefit);
 
-        return PageResponse.from(cinemas.map(cinema -> CinemaExploreResponse.from(
-                cinema,
-                counts.getOrDefault(cinema.getCinemaId(), 0))));
+        List<CinemaBean> matched = new ArrayList<>();
+        for (CinemaBean cinema : cinemas) {
+            if (benefits.keep(cinema.getCinemaId())) {
+                matched.add(cinema);
+            }
+        }
+        matched.sort(cinemaOrder(orderBy, sort));
+
+        int total = matched.size();
+        long offset = request.getOffset();
+        List<CinemaExploreResponse> content = offset >= total
+                ? List.of()
+                : matched.subList((int) offset, (int) Math.min(offset + size, total))
+                        .stream()
+                        .map(cinema -> CinemaExploreResponse.from(
+                                cinema,
+                                benefits.of(cinema.getCinemaId())))
+                        .toList();
+        int totalPages = total == 0 ? 0 : (total + size - 1) / size;
+
+        return new PageResponse<>(content, page, size, total, totalPages);
+    }
+
+    /** 縣市依由北到南排序，其餘欄位維持原本方向，並以影城 ID 穩定次序 */
+    private Comparator<CinemaBean> cinemaOrder(CinemaSort.SortBy orderBy, SortOrder sort) {
+        Comparator<CinemaBean> comparator = switch (orderBy) {
+            case COUNTY -> Comparator.comparingInt(cinema -> cinema.getCounty() == null
+                    ? County.UNKNOWN.northToSouth()
+                    : cinema.getCounty().northToSouth());
+            case CREATED_AT -> Comparator.comparing(
+                    CinemaBean::getCreatedAt,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+            case UPDATED_AT -> Comparator.comparing(
+                    CinemaBean::getUpdatedAt,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+            case CINEMA_ID -> Comparator.comparing(
+                    CinemaBean::getCinemaId,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+        };
+
+        if (sort == SortOrder.DESC) {
+            comparator = comparator.reversed();
+        }
+        if (orderBy != CinemaSort.SortBy.CINEMA_ID) {
+            comparator = comparator.thenComparing(
+                    CinemaBean::getCinemaId,
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+        }
+        return comparator;
     }
 
     private PageRequest pageRequest(
