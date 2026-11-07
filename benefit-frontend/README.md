@@ -1,48 +1,28 @@
 # Benefits Journey｜前端
 
-電影特典地圖的前端介面，提供電影與影城探索、特典及庫存查詢、會員收藏追蹤、交換刊登與站內訊息功能。
+電影特典地圖的前端介面，提供電影與影城探索、地圖，以及後台的電影影城維護、爬蟲同步、審核、紀錄與 Excel 下載。
 
 ## 技術與環境
 
 - 前端框架／語言：Vue 3、JavaScript、Vite、Vue Router
-- UI 與地圖套件：Bootstrap 5、Bootstrap Icons、Iconify、SweetAlert2、Leaflet（含 MarkerCluster）、FullCalendar
+- UI 與地圖套件：Bootstrap 5、Leaflet（OpenStreetMap Tiles、Marker）
 - HTTP：Axios
 - 部署：GitHub Pages
-- 線上體驗：[https://benefitsjourney.github.io/benefits-journey/map](https://benefitsjourney.github.io/benefits-journey/map)
+- 線上體驗：[https://inagakiromi.github.io/benefits-journey/map](https://inagakiromi.github.io/benefits-journey/map)
 - 後端 API：由獨立的 Spring Boot 服務提供，正式環境為 [https://benefits-journey.onrender.com](https://benefits-journey.onrender.com)
 
 ## 主要頁面與功能
 
 ### 探索與地圖
 
-- 瀏覽、搜尋電影、影城及特典，查看特典詳細資訊。
-- 在地圖上查看影城位置，依電影、特典與影城查詢庫存。
-- 查看特典類型與發放日期，包含一般週特典、入場贈與限量兌換。
-
-### 會員中心
-
-- 註冊、登入、登出及 Google 登入。
-- 重設密碼、編輯個人資料、修改密碼與停用帳號。
-- 查看自己的登入紀錄及其他會員的公開頁面。
-
-### 收藏與行事曆
-
-- 記錄持有的特典，管理收藏照片。
-- 追蹤電影或特典，在個人行事曆查看檔期。
-- 提供不需登入即可瀏覽的公開行事曆。
-
-### 回報與交流
-
-- 回報缺漏特典、上傳圖片與回報影城庫存。
-- 查看公開貢獻排行榜。
-- 刊登、編輯、上下架特典交換或票券轉讓資訊，並收藏刊登。
-- 開啟會員對話、傳送訊息及標記已讀。
+- 瀏覽、搜尋電影與影城。電影探索可一併查看特典資訊。
+- 在地圖上查看影城位置，以 Marker 標示每間影城。
 
 ### 管理介面
 
-- 管理會員狀態與登入紀錄。
-- 管理電影、影城、特典及上下架狀態。
-- 審核匯入資料與會員回報，並操作資料匯出。
+- 電影、影城的列表、新增與修改。
+- 爬蟲資料同步、爬蟲審核與爬蟲紀錄。
+- 將電影或影城資料下載為 Excel。
 
 ## 本機執行
 
@@ -62,8 +42,8 @@ npm run dev
 
 ### 環境變數
 
-| 變數 | 說明 |
-| --- | --- |
+| 變數           | 說明                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
 | `VITE_API_URL` | API 基底路徑。本機 `.env` 設為 `/api`，由 Vite 代理到後端。正式建置讀取 `.env.production`，指向已部署的後端。 |
 
 ### 建置與預覽
