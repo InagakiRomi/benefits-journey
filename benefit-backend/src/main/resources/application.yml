@@ -20,12 +20,12 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
 
-  # Email SMTP
+  # Email SMTP。帳密沒設或不是有效的 Gmail 應用程式密碼時，服務仍可啟動，只是忘記密碼寄信不會成功。
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME} #環境變數設定在"會員"分頁有註解，不清楚再問群組
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:

@@ -9,6 +9,8 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
@@ -26,15 +28,20 @@ import com.collection.benefitsjourney.repository.UsersRepository;
 @Service
 public class PasswordResetService {
 
+    private static final Logger log = LoggerFactory.getLogger(PasswordResetService.class);
+
     private final UsersRepository usersRepository;
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String mailUsername;
 
-    @Value("${PASSWORD_RESET_URL}")
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
+    @Value("${PASSWORD_RESET_URL:}")
     private String passwordResetUrl;
 
     private final SecureRandom secureRandom = new SecureRandom();
@@ -59,6 +66,11 @@ public class PasswordResetService {
 
             // 只替啟用中的會員寄送
             if (!"ACTIVE".equals(user.getStatus())) {
+                return;
+            }
+
+            if (!canSendMail()) {
+                log.warn("郵件帳密未設定或不是有效信箱，已略過密碼重設信：{}", user.getEmail());
                 return;
             }
 
@@ -140,6 +152,12 @@ public class PasswordResetService {
 
         usersRepository.save(user);
         tokenRepository.saveAll(tokens);
+    }
+
+    private boolean canSendMail() {
+        return mailUsername != null && mailUsername.contains("@")
+                && mailPassword != null && !mailPassword.isBlank()
+                && passwordResetUrl != null && !passwordResetUrl.isBlank();
     }
 
     private String hashToken(String token) {
