@@ -76,8 +76,8 @@ public class CinemaService {
         Page<CinemaBean> cinemas = cinemaRepository.findAllByFilters(
                 LikeKeywords.toLikeKeyword(keyword),
                 county,
-                null,
-                null,
+                true,
+                true,
                 Boolean.TRUE.equals(hasBenefit),
                 pageRequest(page, size, orderBy, sort));
 

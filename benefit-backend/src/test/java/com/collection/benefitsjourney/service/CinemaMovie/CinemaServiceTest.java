@@ -164,7 +164,7 @@ class CinemaServiceTest {
             CinemaBean withoutBenefits = cinema(101, null, "京站威秀");
             when(cinemaRepository.findAllByFilters(
                     nullable(String.class), nullable(County.class),
-                    nullable(Boolean.class), nullable(Boolean.class),
+                    eq(true), eq(true),
                     eq(false), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(withBenefits, withoutBenefits)));
             when(cinemaMovieBenefitRepository.countApprovedByCinemaIds(List.of(100, 101)))
@@ -185,7 +185,7 @@ class CinemaServiceTest {
         void shouldFilterCinemasWithBenefits() {
             when(cinemaRepository.findAllByFilters(
                     any(String.class), eq(County.TAIPEI),
-                    isNull(), isNull(),
+                    eq(true), eq(true),
                     eq(true), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of()));
 
@@ -196,7 +196,7 @@ class CinemaServiceTest {
             ArgumentCaptor<String> keywordCaptor = ArgumentCaptor.forClass(String.class);
             verify(cinemaRepository).findAllByFilters(
                     keywordCaptor.capture(), eq(County.TAIPEI),
-                    isNull(), isNull(),
+                    eq(true), eq(true),
                     eq(true), any(Pageable.class));
             assertTrue(keywordCaptor.getValue().contains("威秀"));
             verify(cinemaMovieBenefitRepository, never()).countApprovedByCinemaIds(any());

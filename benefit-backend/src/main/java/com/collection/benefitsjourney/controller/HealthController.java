@@ -8,6 +8,8 @@ import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.availability.ApplicationAvailability;
+import org.springframework.boot.availability.ReadinessState;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +26,11 @@ public class HealthController {
     private static final int QUERY_TIMEOUT_SECONDS = 3;
 
     private final DataSource dataSource;
+    private final ApplicationAvailability availability;
 
-    public HealthController(DataSource dataSource) {
+    public HealthController(DataSource dataSource, ApplicationAvailability availability) {
         this.dataSource = dataSource;
+        this.availability = availability;
     }
 
     /** 給前端判斷用的狀態碼 */
@@ -42,6 +46,11 @@ public class HealthController {
      */
     @GetMapping
     public ResponseEntity<HealthResponse> health() {
+        // Web server 會早於 ApplicationRunner 啟動完成；資料匯入期間不可誤報已就緒。
+        if (availability.getReadinessState() != ReadinessState.ACCEPTING_TRAFFIC) {
+            return unavailable();
+        }
+
         try (Connection connection = dataSource.getConnection();
                 Statement statement = connection.createStatement()) {
             statement.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
@@ -50,8 +59,12 @@ public class HealthController {
             return ResponseEntity.ok(new HealthResponse(STATUS_UP));
         } catch (SQLException exception) {
             log.warn("{}: {}", UNAVAILABLE_LOG, exception.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new HealthResponse(STATUS_DOWN));
+            return unavailable();
         }
+    }
+
+    private ResponseEntity<HealthResponse> unavailable() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new HealthResponse(STATUS_DOWN));
     }
 }

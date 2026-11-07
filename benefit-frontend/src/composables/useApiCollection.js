@@ -3,12 +3,70 @@ import http from "@/plugins/axios";
 
 /** fetchAll 補齊其餘頁時，同時最多送出的請求數。 */
 const FETCH_ALL_CONCURRENCY = 4;
+const CACHE_PREFIX = "benefits-journey:api-collection:";
+const memoryCache = new Map();
+
+function requestCacheKey(endpoint, requestParams) {
+  const sortedParams = Object.fromEntries(
+    Object.entries(requestParams ?? {}).sort(([left], [right]) =>
+      left.localeCompare(right),
+    ),
+  );
+  return `${endpoint}?${JSON.stringify(sortedParams)}`;
+}
+
+function readCache(key, ttl) {
+  if (!key || ttl <= 0) return null;
+
+  let cached = memoryCache.get(key);
+  if (!cached) {
+    try {
+      const stored = sessionStorage.getItem(`${CACHE_PREFIX}${key}`);
+      cached = stored ? JSON.parse(stored) : null;
+      if (cached) memoryCache.set(key, cached);
+    } catch {
+      cached = null;
+    }
+  }
+
+  const savedAt = Number(cached?.savedAt);
+  if (
+    !cached ||
+    !Array.isArray(cached.items) ||
+    !Number.isFinite(savedAt) ||
+    Date.now() - savedAt > ttl
+  ) {
+    memoryCache.delete(key);
+    try {
+      sessionStorage.removeItem(`${CACHE_PREFIX}${key}`);
+    } catch {
+      // sessionStorage 不可用時仍可使用記憶體快取。
+    }
+    return null;
+  }
+  return cached;
+}
+
+function writeCache(key, value) {
+  if (!key) return;
+  const cached = { ...value, savedAt: Date.now() };
+  memoryCache.set(key, cached);
+  try {
+    sessionStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(cached));
+  } catch {
+    // 儲存空間已滿或被瀏覽器停用時，不影響正常請求。
+  }
+}
 
 /**
  * 共用列表請求：負責載入、重試、取消舊請求與分頁回應。
  * fetchAll=true 用於需要一次顯示所有結果的頁面。
  */
-export function useApiCollection(endpoint, params, { fetchAll = false, page = null } = {}) {
+export function useApiCollection(
+  endpoint,
+  params,
+  { fetchAll = false, page = null, cacheTtl = 0 } = {},
+) {
   const items = ref([]);
   const totalElements = ref(0);
   const totalPages = ref(0);
@@ -53,13 +111,23 @@ export function useApiCollection(endpoint, params, { fetchAll = false, page = nu
       const { signal } = controller;
       onCleanup(() => controller.abort());
 
-      loading.value = true;
+      const requestParams = params.value;
+      const cacheKey =
+        cacheTtl > 0 ? requestCacheKey(endpoint, requestParams) : null;
+      const cached = readCache(cacheKey, cacheTtl);
+      if (cached) {
+        items.value = cached.items;
+        totalPages.value = cached.totalPages;
+        totalElements.value = cached.totalElements;
+      }
+
+      // 有快取時立即顯示舊資料，並在背景更新，避免重返頁面時再次空白等待。
+      loading.value = !cached;
       error.value = false;
       errorStatus.value = null;
       let redirecting = false;
 
       try {
-        const requestParams = params.value;
         const { data } = await http.get(endpoint, { params: requestParams, signal });
         if (signal.aborted) return;
 
@@ -83,8 +151,14 @@ export function useApiCollection(endpoint, params, { fetchAll = false, page = nu
         items.value = nextItems;
         totalPages.value = pages;
         totalElements.value = Number(data?.totalElements) || nextItems.length;
+        writeCache(cacheKey, {
+          items: nextItems,
+          totalPages: pages,
+          totalElements: totalElements.value,
+        });
       } catch (requestError) {
         if (signal.aborted) return;
+        if (cached) return;
         error.value = true;
         errorStatus.value = requestError?.response?.status ?? null;
         items.value = [];

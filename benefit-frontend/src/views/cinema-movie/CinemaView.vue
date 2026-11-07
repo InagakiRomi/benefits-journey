@@ -23,6 +23,7 @@ import StatePanel from "@/components/layout/StatePanel.vue";
 import TicketCard from "@/components/ui/TicketCard.vue";
 
 const PAGE_SIZE = 21;
+const CACHE_TTL_MS = 5 * 60 * 1000;
 const filters = ref({ keyword: "", county: "", hasBenefit: false });
 const page = ref(1);
 const listTop = ref(null);
@@ -83,7 +84,10 @@ const {
   loading,
   error,
   retry,
-} = useApiCollection("/cinemas/explore", requestParams, { page });
+} = useApiCollection("/cinemas/explore", requestParams, {
+  page,
+  cacheTtl: CACHE_TTL_MS,
+});
 
 const scopeText = computed(() =>
   filters.value.county ? `探索${countyLabel(filters.value.county)}` : "探索全台",
@@ -102,6 +106,7 @@ const detailCinemaId = ref(null);
 const detailBenefits = ref([]);
 const detailLoading = ref(false);
 const detailFailed = ref(false);
+const detailCache = new Map();
 let detailRequest = 0;
 
 function benefitCountOf(cinema) {
@@ -147,14 +152,23 @@ async function openBenefitDetail(cinema) {
   if (cinemaId == null || !canViewBenefits(cinema)) return;
   const requestId = ++detailRequest;
   detailCinemaId.value = cinemaId;
+  detailFailed.value = false;
+
+  const cached = detailCache.get(cinemaId);
+  if (cached && Date.now() - cached.savedAt <= CACHE_TTL_MS) {
+    detailBenefits.value = cached.benefits;
+    detailLoading.value = false;
+    return;
+  }
+
   detailBenefits.value = [];
   detailLoading.value = true;
-  detailFailed.value = false;
   try {
     const { data } = await http.get(`/cinemas/${cinemaId}/benefits/status`);
     if (requestId !== detailRequest) return;
     if (!Array.isArray(data)) throw new Error("影城特典 API 回傳格式有誤");
     detailBenefits.value = data;
+    detailCache.set(cinemaId, { benefits: data, savedAt: Date.now() });
   } catch (error) {
     if (requestId !== detailRequest) return;
     console.error("影城特典載入失敗", error);
@@ -249,6 +263,11 @@ async function openBenefitDetail(cinema) {
 
 .cinema-page :deep(.ticket-stub) {
   flex-wrap: wrap;
+}
+
+.cinema-page :deep(.ticket-frame) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 235px;
 }
 
 @media (min-width: 768px) {

@@ -2,46 +2,47 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import FrontLayout from '@/layouts/FrontLayout.vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
-import AdminCrawlerView from '@/views/admin/crawler/AdminCrawlerView.vue'
-import AdminCrawlerLogView from '@/views/admin/crawler/AdminCrawlerLogView.vue'
-import AdminCinemaView from '@/views/admin/cinema-movie/AdminCinemaView.vue'
-import AdminCinemaDetail from '@/views/admin/cinema-movie/AdminCinemaDetail.vue'
-import AdminCinemaForm from '@/views/admin/cinema-movie/AdminCinemaForm.vue'
-import AdminMovieView from '@/views/admin/cinema-movie/AdminMovieView.vue'
-import AdminMovieDetail from '@/views/admin/cinema-movie/AdminMovieDetail.vue'
-import AdminMovieForm from '@/views/admin/cinema-movie/AdminMovieForm.vue'
-import AdminCrawlerReviewView from '@/views/admin/cinema-movie/AdminCrawlerReviewView.vue'
-import AdminBenefitReportView from '@/views/admin/benefit/AdminBenefitReportView.vue'
-import AdminBenefitView from '@/views/admin/benefit/AdminBenefitView.vue'
-import AdminInventoryReportView from '@/views/admin/benefit/AdminInventoryReportView.vue'
-import AdminExcelExportView from '@/views/admin/excel/AdminExcelExportView.vue'
-import BenefitView from '@/views/benefit/BenefitView.vue'
-import BenefitDetailView from '@/views/benefit/BenefitDetailView.vue'
-import CollectionView from '@/views/benefit/CollectionView.vue'
-import MyReportView from '@/views/benefit/MyReportView.vue'
-import BenefitReportFormView from '@/views/benefit/BenefitReportFormView.vue'
-import CalendarView from '@/views/calendar/CalendarView.vue'
-import ReminderView from '@/views/calendar/ReminderView.vue'
-import RankingView from '@/views/ranking/RankingView.vue'
-import CinemaView from '@/views/cinema-movie/CinemaView.vue'
-import MapView from '@/views/map/MapView.vue'
-import MovieView from '@/views/cinema-movie/MovieView.vue'
-import LoginView from '@/views/auth/LoginView.vue'
-import RegisterView from '@/views/auth/RegisterView.vue'
-import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
-import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
-import AccountHomeView from '@/views/account/AccountHomeView.vue'
-import AccountProfileView from '@/views/account/AccountProfileView.vue'
-import AccountBenefitsView from '@/views/account/AccountBenefitsView.vue'
-import AccountFeedbackView from '@/views/account/AccountFeedbackView.vue'
-import AdminUsersView from '@/views/admin/member/AdminUsersView.vue'
-import AdminLoginLogsView from '@/views/admin/member/AdminLoginLogsView.vue'
-import AdminFeedbackView from '@/views/admin/member/AdminFeedbackView.vue'
-import MessageInboxView from '@/views/messages/MessageInboxView.vue'
-import MessageConversationView from '@/views/messages/MessageConversationView.vue'
-import ExchangeView from '@/views/exchange/ExchangeView.vue'
-import ExchangeMyFavoritesView from '@/views/exchange/ExchangeMyFavoritesView.vue'
-import ExchangeMyListingsView from '@/views/exchange/ExchangeMyListingsView.vue'
+
+const AdminCrawlerView = () => import('@/views/admin/crawler/AdminCrawlerView.vue')
+const AdminCrawlerLogView = () => import('@/views/admin/crawler/AdminCrawlerLogView.vue')
+const AdminCinemaView = () => import('@/views/admin/cinema-movie/AdminCinemaView.vue')
+const AdminCinemaDetail = () => import('@/views/admin/cinema-movie/AdminCinemaDetail.vue')
+const AdminCinemaForm = () => import('@/views/admin/cinema-movie/AdminCinemaForm.vue')
+const AdminMovieView = () => import('@/views/admin/cinema-movie/AdminMovieView.vue')
+const AdminMovieDetail = () => import('@/views/admin/cinema-movie/AdminMovieDetail.vue')
+const AdminMovieForm = () => import('@/views/admin/cinema-movie/AdminMovieForm.vue')
+const AdminCrawlerReviewView = () => import('@/views/admin/cinema-movie/AdminCrawlerReviewView.vue')
+const AdminBenefitReportView = () => import('@/views/admin/benefit/AdminBenefitReportView.vue')
+const AdminBenefitView = () => import('@/views/admin/benefit/AdminBenefitView.vue')
+const AdminInventoryReportView = () => import('@/views/admin/benefit/AdminInventoryReportView.vue')
+const AdminExcelExportView = () => import('@/views/admin/excel/AdminExcelExportView.vue')
+const BenefitView = () => import('@/views/benefit/BenefitView.vue')
+const BenefitDetailView = () => import('@/views/benefit/BenefitDetailView.vue')
+const CollectionView = () => import('@/views/benefit/CollectionView.vue')
+const MyReportView = () => import('@/views/benefit/MyReportView.vue')
+const BenefitReportFormView = () => import('@/views/benefit/BenefitReportFormView.vue')
+const CalendarView = () => import('@/views/calendar/CalendarView.vue')
+const ReminderView = () => import('@/views/calendar/ReminderView.vue')
+const RankingView = () => import('@/views/ranking/RankingView.vue')
+const CinemaView = () => import('@/views/cinema-movie/CinemaView.vue')
+const MapView = () => import('@/views/map/MapView.vue')
+const MovieView = () => import('@/views/cinema-movie/MovieView.vue')
+const LoginView = () => import('@/views/auth/LoginView.vue')
+const RegisterView = () => import('@/views/auth/RegisterView.vue')
+const ForgotPasswordView = () => import('@/views/auth/ForgotPasswordView.vue')
+const ResetPasswordView = () => import('@/views/auth/ResetPasswordView.vue')
+const AccountHomeView = () => import('@/views/account/AccountHomeView.vue')
+const AccountProfileView = () => import('@/views/account/AccountProfileView.vue')
+const AccountBenefitsView = () => import('@/views/account/AccountBenefitsView.vue')
+const AccountFeedbackView = () => import('@/views/account/AccountFeedbackView.vue')
+const AdminUsersView = () => import('@/views/admin/member/AdminUsersView.vue')
+const AdminLoginLogsView = () => import('@/views/admin/member/AdminLoginLogsView.vue')
+const AdminFeedbackView = () => import('@/views/admin/member/AdminFeedbackView.vue')
+const MessageInboxView = () => import('@/views/messages/MessageInboxView.vue')
+const MessageConversationView = () => import('@/views/messages/MessageConversationView.vue')
+const ExchangeView = () => import('@/views/exchange/ExchangeView.vue')
+const ExchangeMyFavoritesView = () => import('@/views/exchange/ExchangeMyFavoritesView.vue')
+const ExchangeMyListingsView = () => import('@/views/exchange/ExchangeMyListingsView.vue')
 
 
 const router = createRouter({
