@@ -10,22 +10,18 @@ import alertIcon from "@iconify-icons/mdi/alert-circle-outline";
 /** 1秒內連上後端時，連線中與成功提示都不顯示 */
 const SILENT_SUCCESS_MS = 1_000;
 
-/** 連線超過4分鐘時，顯示「連線有點久」 */
-const SLOW_AFTER_MS = 4 * 60 * 1000;
-
 /** 連線超過5分鐘時，顯示「連線失敗」 */
 const FAIL_AFTER_MS = 5 * 60 * 1000;
 
 /** 成功提示顯示3.5秒 */
 const SUCCESS_VISIBLE_MS = 3_500;
 
-/** 連線失敗後隔2秒再試，偵測後端是否啟動成功 */
-const RETRY_GAP_MS = 2_000;
+/** 連線失敗後隔3秒再試，偵測後端是否啟動成功 */
+const RETRY_GAP_MS = 3_000;
 
 /** 狀態 */
 const state = reactive({
   phase: "idle",
-  slow: false,
   visible: false,
   elapsedSeconds: 0,
 });
@@ -37,7 +33,6 @@ let attemptToken = 0;
 let startedAt = 0;
 let abortController = null;
 let tickTimer = null;
-let slowTimer = null;
 let failTimer = null;
 let hideTimer = null;
 let revealTimer = null;
@@ -45,13 +40,12 @@ let retryTimer = null;
 let releaseRetryWait = null;
 
 function clearSchedule() {
-  clearTimeout(slowTimer);
   clearTimeout(failTimer);
   clearTimeout(hideTimer);
   clearTimeout(revealTimer);
   clearTimeout(retryTimer);
   clearInterval(tickTimer);
-  slowTimer = failTimer = hideTimer = revealTimer = retryTimer = tickTimer = null;
+  failTimer = hideTimer = revealTimer = retryTimer = tickTimer = null;
   releaseRetryWait?.();
   releaseRetryWait = null;
 }
@@ -69,7 +63,10 @@ function waitRetry(ms) {
 
 /** 以實際開始時間計算耗時，避免計時器延遲造成秒數不準 */
 function updateElapsedTime() {
-  state.elapsedSeconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+  state.elapsedSeconds = Math.max(
+    0,
+    Math.floor((Date.now() - startedAt) / 1000),
+  );
 }
 
 /** 成功與逾時共用收尾流程，避免舊請求或計時器再次修改畫面 */
@@ -79,7 +76,6 @@ function finish(phase) {
   const showSuccess = state.visible;
   clearSchedule();
   state.phase = phase;
-  state.slow = false;
 
   if (phase === "failed") {
     state.visible = true;
@@ -104,7 +100,6 @@ async function begin() {
   stopped = false;
   startedAt = Date.now();
   state.phase = "connecting";
-  state.slow = false;
   state.visible = false;
   state.elapsedSeconds = 0;
   clearSchedule();
@@ -115,11 +110,6 @@ async function begin() {
   tickTimer = setInterval(() => {
     if (state.phase === "connecting") updateElapsedTime();
   }, 1000);
-
-  slowTimer = setTimeout(() => {
-    slowTimer = null;
-    if (state.phase === "connecting") state.slow = true;
-  }, SLOW_AFTER_MS);
 
   failTimer = setTimeout(() => {
     failTimer = null;
@@ -157,13 +147,17 @@ async function begin() {
       if (abortController === controller) abortController = null;
     }
 
-    if (stopped || current !== attemptToken || state.phase !== "connecting") return;
+    if (stopped || current !== attemptToken || state.phase !== "connecting")
+      return;
     if (connected) {
       finish("success");
       return;
     }
 
-    const gap = Math.min(RETRY_GAP_MS, FAIL_AFTER_MS - (Date.now() - startedAt));
+    const gap = Math.min(
+      RETRY_GAP_MS,
+      FAIL_AFTER_MS - (Date.now() - startedAt),
+    );
     if (gap <= 0) {
       finish("failed");
       return;
@@ -185,8 +179,7 @@ const elapsedText = computed(() => {
 const message = computed(() => {
   if (state.phase === "success") return `連線成功，花費 ${elapsedText.value}`;
   if (state.phase === "failed") return "連線失敗，請稍後再試";
-  if (state.slow) return `伺服器回應較慢，請稍候（已等待 ${elapsedText.value}）`;
-  return `正在連線，請稍候（已等待 ${elapsedText.value}）`;
+  return `首次啟動約需 3～5 分鐘，請稍候（已等待 ${elapsedText.value}）`;
 });
 
 /** 圖示 */
@@ -214,14 +207,31 @@ onUnmounted(() => {
 
 <template>
   <Transition name="backend-toast">
-    <div v-if="state.visible" class="backend-toast-anchor" :class="{ 'is-interactive': state.phase === 'failed' }">
-      <div class="backend-toast" :class="toastClasses" :role="state.phase === 'failed' ? 'alert' : 'status'"
-        aria-live="polite">
+    <div
+      v-if="state.visible"
+      class="backend-toast-anchor"
+      :class="{ 'is-interactive': state.phase === 'failed' }"
+    >
+      <div
+        class="backend-toast"
+        :class="toastClasses"
+        :role="state.phase === 'failed' ? 'alert' : 'status'"
+        aria-live="polite"
+      >
         <span class="backend-toast-mark" aria-hidden="true">
-          <Icon :icon="icon" class="backend-toast-icon" :class="{ spin: state.phase === 'connecting' }" />
+          <Icon
+            :icon="icon"
+            class="backend-toast-icon"
+            :class="{ spin: state.phase === 'connecting' }"
+          />
         </span>
-        <span>{{ message }}</span>
-        <button v-if="state.phase === 'failed'" type="button" class="backend-toast-retry" @click="begin">
+        <span class="backend-toast-text">{{ message }}</span>
+        <button
+          v-if="state.phase === 'failed'"
+          type="button"
+          class="backend-toast-retry"
+          @click="begin"
+        >
           重新連線
         </button>
       </div>
@@ -247,7 +257,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  max-width: min(92vw, 36rem);
+  max-width: min(92vw, 42rem);
   padding: 0.4rem 1rem 0.4rem 0.4rem;
   border: 1.5px solid var(--toast-border);
   border-radius: 999px;
@@ -292,6 +302,10 @@ onUnmounted(() => {
 
 .backend-toast.is-connecting {
   animation: backend-toast-bounce 1.15s ease-in-out infinite;
+}
+
+.backend-toast-text {
+  min-width: 0;
 }
 
 .backend-toast-mark {
@@ -352,7 +366,6 @@ onUnmounted(() => {
 }
 
 @keyframes backend-toast-bounce {
-
   0%,
   100% {
     transform: translateY(0);
